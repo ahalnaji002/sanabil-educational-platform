@@ -73,7 +73,7 @@ export function SiteHeader() {
             {navigationLinks.map((link) => {
               const isActive = activeHash === link.hash;
               const stateClass = isActive
-                ? "bg-white/10 text-[var(--sanabil-gold)] sm:bg-transparent sm:text-slate-200"
+                ? "bg-white/10 text-[var(--sanabil-gold)]"
                 : "text-slate-300 hover:bg-white/10 hover:text-white sm:text-slate-200";
 
               return (
@@ -81,9 +81,8 @@ export function SiteHeader() {
                   <Link
                     href={link.href}
                     aria-current={isActive ? "location" : undefined}
-                    onClick={() => setVisibleSection(link.hash)}
                     className={[
-                      "mobile-nav-link inline-flex min-h-9 items-center whitespace-nowrap rounded-lg px-2 text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)] sm:min-h-10 sm:rounded-xl sm:px-3 sm:text-sm",
+                      "inline-flex min-h-9 items-center whitespace-nowrap rounded-lg px-2 text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)] sm:min-h-10 sm:rounded-xl sm:px-3 sm:text-sm",
                       stateClass,
                     ].join(" ")}
                   >
