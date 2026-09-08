@@ -44,7 +44,7 @@ export function AnnouncementDialog({ announcement, onClose }: { announcement: An
       onClick={(event) => {
         if (event.target === dialogRef.current) onClose();
       }}
-      className={`m-auto max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[2rem] border-0 bg-white p-0 text-right text-[var(--sanabil-navy)] shadow-2xl backdrop:bg-[#031024]/80 max-sm:mb-0 sm:max-h-[92dvh] sm:rounded-[2rem] ${
+      className={`m-auto max-h-[85dvh] overflow-y-auto overscroll-contain rounded-[2rem] border-0 bg-white p-0 text-right text-[var(--sanabil-navy)] shadow-2xl backdrop:bg-[#031024]/75 backdrop:backdrop-blur-sm sm:max-h-[92dvh] ${
         announcement.image
           ? "w-[calc(100%_-_1rem)] sm:w-[min(calc(100vw-1.5rem),70.4dvh,42rem)]"
           : "w-[calc(100%_-_1.5rem)] max-w-2xl"
@@ -52,14 +52,22 @@ export function AnnouncementDialog({ announcement, onClose }: { announcement: An
     >
       {announcement.image ? (
         <div className="relative w-full overflow-hidden bg-white sm:flex sm:aspect-[1117/1170] sm:items-end sm:bg-[var(--sanabil-navy)] sm:text-white">
-          <div className="relative h-[26dvh] min-h-44 w-full overflow-hidden bg-[var(--sanabil-navy)] sm:absolute sm:inset-0 sm:h-auto sm:min-h-0">
+          <div className="relative h-[34dvh] min-h-52 max-h-64 w-full overflow-hidden bg-[var(--sanabil-navy)] sm:absolute sm:inset-0 sm:h-auto sm:min-h-0">
+            <Image
+              src={announcement.image}
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 639px) 100vw, 1px"
+              className="scale-110 object-cover opacity-30 blur-md sm:hidden"
+            />
             <Image
               src={announcement.image}
               alt=""
               fill
               priority
               sizes="(max-width: 672px) 100vw, 672px"
-              className="object-cover opacity-85 sm:object-contain sm:opacity-80"
+              className="object-contain opacity-95 sm:opacity-80"
             />
             <div
               aria-hidden="true"
