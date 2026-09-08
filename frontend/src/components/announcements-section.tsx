@@ -9,7 +9,7 @@ export function AnnouncementsSection({ announcements }: { announcements: readonl
   const [selected, setSelected] = useState<Announcement | null>(null);
   if (!announcements.length) return null;
   return (
-    <section aria-labelledby="announcements-heading" className="bg-white px-5 py-16 sm:px-8 sm:py-20">
+    <section id="announcements" aria-labelledby="announcements-heading" className="section-reveal scroll-mt-24 bg-white px-5 py-16 sm:px-8 sm:py-20">
       <div className="mx-auto max-w-6xl">
         <p className="font-bold text-[var(--sanabil-gold-dark)]">آخر المستجدات</p>
         <h2 id="announcements-heading" className="mt-2 text-3xl font-extrabold sm:text-4xl">إعلانات سنابل</h2>

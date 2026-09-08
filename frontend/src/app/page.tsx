@@ -12,7 +12,7 @@ export default async function HomePage() {
     <>
       <SiteHeader />
       <main>
-        <section className="relative overflow-hidden bg-[var(--sanabil-navy)] px-5 pb-24 pt-14 text-white sm:px-8 sm:pb-32 sm:pt-20">
+        <section id="home" className="section-reveal scroll-mt-24 relative overflow-hidden bg-[var(--sanabil-navy)] px-5 pb-24 pt-14 text-white sm:px-8 sm:pb-32 sm:pt-20">
           <div
             aria-hidden="true"
             className="absolute -left-24 top-10 size-72 rounded-full border border-[var(--sanabil-gold)]/20"
@@ -23,7 +23,7 @@ export default async function HomePage() {
           />
           <div className="relative mx-auto max-w-6xl">
             <span className="inline-flex rounded-full border border-[var(--sanabil-gold)]/40 bg-[var(--sanabil-gold)]/10 px-4 py-2 text-sm font-bold text-[var(--sanabil-gold)]">
-              من غزة، نصنع مساحة للتعلّم
+              من فلسطين، نصنع مساحة للتعلّم
             </span>
             <h1 className="mt-7 max-w-3xl text-4xl font-extrabold leading-[1.35] sm:text-5xl lg:text-6xl">
               طريقك إلى المعرفة
@@ -44,7 +44,7 @@ export default async function HomePage() {
           </div>
         </section>
         <AnnouncementsSection announcements={announcements} />
-        <section id="subjects" className="px-5 py-16 sm:px-8 sm:py-24">
+        <section id="subjects" className="section-reveal scroll-mt-24 px-5 py-16 sm:px-8 sm:py-24">
           <div className="mx-auto max-w-6xl">
             <p className="font-bold text-[var(--sanabil-gold-dark)]">
               المواد التعليمية
@@ -65,8 +65,10 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
-        <section className="bg-white px-5 py-12 sm:px-8">
-          <div className="mx-auto grid max-w-6xl gap-6 rounded-[2rem] bg-[var(--sanabil-navy)] p-7 text-white sm:grid-cols-3 sm:p-10">
+        <section id="how-it-works" aria-labelledby="how-it-works-heading" className="section-reveal scroll-mt-24 bg-white px-5 py-12 sm:px-8">
+          <div className="mx-auto max-w-6xl">
+            <h2 id="how-it-works-heading" className="sr-only">كيف تعمل المنصة</h2>
+            <div className="grid gap-6 rounded-[2rem] bg-[var(--sanabil-navy)] p-7 text-white sm:grid-cols-3 sm:p-10">
             <div>
               <strong className="text-3xl text-[var(--sanabil-gold)]">
                 01
@@ -93,6 +95,7 @@ export default async function HomePage() {
               <p className="mt-1 text-sm leading-6 text-slate-300">
                 تصفح المحتوى داخل Google Drive.
               </p>
+            </div>
             </div>
           </div>
         </section>

@@ -50,6 +50,7 @@ export function SiteFooter() {
       </div>
       <p className="mx-auto mt-8 max-w-6xl border-t border-white/10 pt-5 text-center text-xs text-slate-400">
         المحتوى التعليمي يُفتح عبر Google Drive دون تنزيل تلقائي.
+        <span className="mt-2 block text-[11px] text-slate-500">Designed &amp; Developed by Ahmed Hashem</span>
       </p>
     </footer>
   );

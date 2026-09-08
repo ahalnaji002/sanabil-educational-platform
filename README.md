@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Sanabil is an Arabic-first educational platform for students in Gaza, Palestine. Feature 1 provides a curated path from a subject to approved Google Drive destination folders. The platform does not index or reproduce the files inside Google Drive.
+Sanabil is an Arabic-first educational platform for students across Palestine. Feature 1 provides a curated path from a subject to approved Google Drive destination folders. The platform does not index or reproduce the files inside Google Drive.
 
 The repository is split into independently deployable applications:
 
@@ -13,6 +13,7 @@ The repository is split into independently deployable applications:
 
 - Student-facing Arabic RTL homepage with responsive subject cards.
 - Pre-rendered subject destination pages at /subjects/[slug].
+- Compact subject-to-subject quick navigation on every subject destination page.
 - Seven local subjects, including Biology and Scientific Technology.
 - Replaceable local subject service; no backend or database is required for the frontend MVP.
 - Safe Google Drive destination behavior: links open in a new tab only when an approved URL exists.
