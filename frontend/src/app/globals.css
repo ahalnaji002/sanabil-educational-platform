@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  --sanabil-navy: #071b36;
+  --sanabil-navy-light: #102d52;
+  --sanabil-gold: #e5b94f;
+  --sanabil-gold-dark: #d6a52f;
+  --sanabil-gold-soft: #fff2c9;
+  --sanabil-cream: #fffaf0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--sanabil-cream);
+  color: var(--sanabil-navy);
+  font-family: var(--font-alexandria), Tahoma, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--sanabil-gold); color: var(--sanabil-navy); }
+
+dialog {
+  opacity: 0;
+  transform: translateY(12px) scale(.98);
+  transition: opacity 180ms ease, transform 180ms ease, overlay 180ms ease allow-discrete, display 180ms ease allow-discrete;
+}
+
+dialog[open] { opacity: 1; transform: translateY(0) scale(1); }
+
+@starting-style {
+  dialog[open] { opacity: 0; transform: translateY(12px) scale(.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

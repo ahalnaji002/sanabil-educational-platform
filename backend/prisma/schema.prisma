@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+model Admin {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(120)
+  email        String    @unique @db.VarChar(191)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  role         AdminRole @default(ADMIN)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("admins")
+}
+
+model Subject {
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(120)
+  slug       String      @unique @db.VarChar(160)
+  isActive   Boolean     @default(true) @map("is_active")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  driveLinks DriveLink[]
+
+  @@index([isActive])
+  @@map("subjects")
+}
+
+model DriveLink {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(160)
+  description String?  @db.Text
+  subjectId   Int      @map("subject_id")
+  driveUrl    String   @map("drive_url") @db.VarChar(2048)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([subjectId, isActive, sortOrder])
+  @@map("drive_links")
+}
+
