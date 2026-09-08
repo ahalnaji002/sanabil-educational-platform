@@ -8,9 +8,11 @@ describe("local announcement service", () => {
     expect(announcements.every(({ isActive }) => isActive)).toBe(true);
   });
 
-  it("supports announcements without an image or CTA", async () => {
+  it("returns the configured image while keeping the CTA optional", async () => {
     const announcements = await announcementService.getActiveAnnouncements();
-    expect(announcements.some(({ image }) => image === null)).toBe(true);
+    const destinationsAnnouncement = announcements.find(({ id }) => id === 2);
+
+    expect(destinationsAnnouncement?.image).toBe("/announcements/subject-destinations.png");
     expect(announcements.some(({ ctaUrl, ctaLabel }) => ctaUrl === null && ctaLabel === null)).toBe(true);
   });
 });

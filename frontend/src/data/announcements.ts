@@ -20,7 +20,7 @@ export const localAnnouncements: readonly Announcement[] = [
     title: "وجهات المواد أصبحت أقرب",
     summary: "اختر مادتك وانتقل إلى وجهتها المعتمدة بخطوات بسيطة.",
     details: "رتبنا لك الوصول إلى المواد في مسار واضح: اختر المادة، ثم الوجهة المناسبة، وأكمل التصفح داخل Google Drive.",
-    image: null,
+    image: "/announcements/subject-destinations.png",
     badge: "جديد",
     ctaLabel: null,
     ctaUrl: null,

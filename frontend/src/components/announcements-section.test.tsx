@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Announcement } from "@/types/announcement";
 import { AnnouncementsSection } from "./announcements-section";
 
@@ -10,6 +10,8 @@ const item: Announcement = {
   image: null, badge: null, ctaLabel: null, ctaUrl: null, isActive: true,
   sortOrder: 1, startsAt: null, endsAt: null,
 };
+
+afterEach(cleanup);
 
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) { this.setAttribute("open", ""); });
@@ -28,5 +30,20 @@ describe("announcements section", () => {
     await user.click(screen.getByRole("button", { name: "إغلاق الإعلان" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.activeElement).toBe(opener);
+  });
+  it("shows the full details for an announcement with an image", async () => {
+    const user = userEvent.setup();
+    const imageAnnouncement = {
+      ...item,
+      id: 2,
+      image: "/announcements/subject-destinations.png",
+    };
+
+    const view = render(<AnnouncementsSection announcements={[imageAnnouncement]} />);
+    await user.click(view.getByRole("button", { name: /عرض التفاصيل/ }));
+
+    expect(view.getByRole("dialog").hasAttribute("open")).toBe(true);
+    expect(view.getByText("تفاصيل الإعلان")).toBeTruthy();
+    expect(view.getByRole("button", { name: "إغلاق الإعلان" })).toBeTruthy();
   });
 });
