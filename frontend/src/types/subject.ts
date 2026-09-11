@@ -1,3 +1,5 @@
+import type { GradeId } from "./grade";
+
 export type DriveDestination = {
   id: number;
   title: string;
@@ -8,6 +10,7 @@ export type DriveDestination = {
 
 export type Subject = {
   id: number;
+  gradeId: GradeId;
   name: string;
   slug: string;
   summary: string;

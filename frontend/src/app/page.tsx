@@ -1,7 +1,8 @@
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { SubjectCard } from "@/components/subject-card";
+import { SubjectsSection } from "@/components/subjects-section";
 import { AnnouncementsSection } from "@/components/announcements-section";
+import { localGrades } from "@/data/grades";
 import { subjectService } from "@/services/subject-service";
 import { announcementService } from "@/services/announcement-service";
 
@@ -44,27 +45,7 @@ export default async function HomePage() {
           </div>
         </section>
         <AnnouncementsSection announcements={announcements} />
-        <section id="subjects" className="section-reveal scroll-mt-24 px-5 py-16 sm:px-8 sm:py-24">
-          <div className="mx-auto max-w-6xl">
-            <p className="font-bold text-[var(--sanabil-gold-dark)]">
-              المواد التعليمية
-            </p>
-            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <h2 className="text-3xl font-black text-[var(--sanabil-navy)] sm:text-4xl">
-                اختر المادة التي تريدها
-              </h2>
-              <p className="max-w-md leading-7 text-slate-600">
-                كل بطاقة تقودك إلى الوجهات المرتبة الخاصة بالمادة، دون تحميل أي
-                محتوى تلقائياً.
-              </p>
-            </div>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {subjects.map((subject) => (
-                <SubjectCard key={subject.id} subject={subject} />
-              ))}
-            </div>
-          </div>
-        </section>
+        <SubjectsSection grades={localGrades} subjects={subjects} />
         <section id="how-it-works" aria-labelledby="how-it-works-heading" className="section-reveal scroll-mt-24 bg-white px-5 py-12 sm:px-8">
           <div className="mx-auto max-w-6xl">
             <h2 id="how-it-works-heading" className="sr-only">كيف تعمل المنصة</h2>

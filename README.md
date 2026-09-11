@@ -11,7 +11,7 @@ The repository is split into independently deployable applications:
 
 ## Features
 
-- Student-facing Arabic RTL homepage with responsive subject cards.
+- Student-facing Arabic RTL homepage with a responsive grade-first subject flow.
 - Pre-rendered subject destination pages at /subjects/[slug].
 - Compact subject-to-subject quick navigation on every subject destination page.
 - Seven local subjects, including Biology and Scientific Technology.
@@ -67,7 +67,7 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
-For the frontend-only MVP, run npm run dev:frontend and open http://localhost:3000. Subject content is maintained in frontend/src/data/subjects.ts. Replace a null driveUrl only with its approved Sanabil Google Drive destination.
+For the frontend-only MVP, run npm run dev:frontend and open http://localhost:3000. Students select عاشر, حادي عشر, or توجيهي before seeing grade-specific subjects; current subject content belongs to توجيهي, while the other grades show a coming-soon state. Grade options are maintained in frontend/src/data/grades.ts and subjects are associated through their gradeId in frontend/src/data/subjects.ts. Replace a null driveUrl only with its approved Sanabil Google Drive destination.
 
 Announcement content is maintained in frontend/src/data/announcements.ts and is accessed only through announcementService. Active/date filtering and ordering are handled by the service so it can later be replaced with an API implementation.
 

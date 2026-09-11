@@ -7,6 +7,7 @@ import type { Subject } from "@/types/subject";
 const subjects: readonly Subject[] = [
   {
     id: 1,
+    gradeId: "tawjihi",
     name: "الرياضيات",
     slug: "mathematics",
     icon: "calculator",
@@ -15,6 +16,7 @@ const subjects: readonly Subject[] = [
   },
   {
     id: 2,
+    gradeId: "tawjihi",
     name: "الفيزياء",
     slug: "physics",
     icon: "atom",
