@@ -22,6 +22,9 @@ The repository is split into independently deployable applications:
 - Responsive footer with direct phone and WhatsApp contact links.
 - Arabic RTL frontend foundation with Sanabil navy and gold branding.
 - Express REST API foundation, health endpoint, and HttpOnly cookie-based admin authentication.
+- Arabic admin login and protected responsive dashboard shell at `/admin/login` and `/admin/dashboard`.
+- Protected Arabic subject management at `/admin/dashboard/subjects` with server-side grade/status filters, create, edit, activate, and soft-deactivate actions.
+- Fixed database grade enum (`TENTH`, `ELEVENTH`, `TAWJIHI`) and protected admin/public subject APIs.
 - Initial Prisma entities: `Admin`, `Subject`, and `DriveLink` only.
 - A subject owns zero or more ordered Drive destination links.
 - Environment templates keep credentials and secrets out of source control.
@@ -41,7 +44,7 @@ Install dependencies from the repository root:
 npm install
 ```
 
-Copy `backend/.env.example` to `backend/.env` and replace every placeholder. Copy `frontend/.env.example` to `frontend/.env.local`.
+Copy `backend/.env.example` to `backend/.env` and replace every placeholder. Copy `frontend/.env.example` to `frontend/.env.local`, then set `NEXT_PUBLIC_API_URL` to the API origin without a trailing `/api` path (for example, the local API origin during development).
 
 Backend variables are validated at startup. JWT_SECRET must be strong and at least 32 characters. FRONTEND_ORIGIN is explicit. Cookies are always HttpOnly, Secure in production, and default to SameSite=Lax. SameSite=None is unsupported until CSRF protection is added.
 
@@ -58,7 +61,7 @@ npm run prisma:migrate --workspace backend
 npm run prisma:seed --workspace backend
 ```
 
-The seed reads credentials from the environment, hashes the password, and upserts by normalized email.
+The seed reads credentials from the environment, hashes the password, and upserts by normalized email. It also upserts seven local development subjects across the three fixed grades without creating Drive links or fake Drive URLs.
 
 Start the applications in separate terminals:
 
@@ -70,6 +73,10 @@ npm run dev:frontend
 For the frontend-only MVP, run npm run dev:frontend and open http://localhost:3000. Students select عاشر, حادي عشر, or توجيهي before seeing grade-specific subjects; current subject content belongs to توجيهي, while the other grades show a coming-soon state. Grade options are maintained in frontend/src/data/grades.ts and subjects are associated through their gradeId in frontend/src/data/subjects.ts. Replace a null driveUrl only with its approved Sanabil Google Drive destination.
 
 Announcement content is maintained in frontend/src/data/announcements.ts and is accessed only through announcementService. Active/date filtering and ordering are handled by the service so it can later be replaced with an API implementation.
+
+Admin users sign in at `/admin/login`. The frontend validates the existing HttpOnly-cookie session through the configured API and protects `/admin/dashboard` before rendering management content. Dashboard content-management sections are intentionally disabled until their later implementation phases.
+
+Subject management is available at `/admin/dashboard/subjects`. Admin requests use `/api/admin/subjects`, where `DELETE` performs reversible deactivation rather than physical deletion. The unauthenticated `/api/public/subjects` endpoint exposes active subjects only and is ready for a later student-frontend migration; the current public pages continue using local frontend subject data.
 
 The current discount announcement uses the supplied local image at frontend/public/announcements/sanabil-50-off-v2.png. Its details dialog presents the image as a softened background with a dark lower gradient behind the announcement text.
 
@@ -99,4 +106,4 @@ Create a Vercel project from this repository with these exact settings:
 - Output Directory: leave blank (Next.js default)
 - Node.js Version: 22.x
 
-No environment variables are required while the local subject service is active. frontend/vercel.json declares the Next.js framework. Deployments are statically pre-rendered and do not require the backend.
+Set `NEXT_PUBLIC_API_URL` in Vercel to the production API origin. `frontend/vercel.json` declares the Next.js framework; public subject content remains statically pre-rendered, while admin authentication communicates with the existing backend from the browser using credentialed requests.

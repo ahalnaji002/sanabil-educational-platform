@@ -7,9 +7,16 @@ import { errorHandler } from "./middlewares/error-handler.js";
 import { notFound } from "./middlewares/not-found.js";
 import type { AdminRepository } from "./modules/auth/auth.repository.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { prisma } from "./config/prisma.js";
+import { PrismaSubjectRepository, type SubjectRepository } from "./modules/subjects/subject.repository.js";
+import { adminSubjectRouter, publicSubjectRouter } from "./modules/subjects/subject.routes.js";
 import { sendSuccess } from "./utils/response.js";
 
-export const createApp = (config: AppConfig, repo: AdminRepository) => {
+export const createApp = (
+  config: AppConfig,
+  repo: AdminRepository,
+  subjectRepository: SubjectRepository = new PrismaSubjectRepository(prisma),
+) => {
   const app = express();
 
   app.disable("x-powered-by");
@@ -22,6 +29,8 @@ export const createApp = (config: AppConfig, repo: AdminRepository) => {
     sendSuccess(response, 200, "Service is healthy", { status: "ok" });
   });
   app.use("/api/auth", authRouter(config, repo));
+  app.use("/api/admin/subjects", adminSubjectRouter(config, repo, subjectRepository));
+  app.use("/api/public/subjects", publicSubjectRouter(subjectRepository));
   app.use(notFound);
   app.use(errorHandler);
 
