@@ -18,10 +18,12 @@ import { AdminDriveLinkError } from "../../services/admin-drive-link-service";
 import { AdminDriveLinksPage } from "./admin-drive-links-page";
 
 const subject = { id: 1, name: "الرياضيات", slug: "mathematics", grade: "TAWJIHI" as const, isActive: true, createdAt: "2026", updatedAt: "2026" };
+const tenthSubject = { ...subject, id: 2, name: "علوم عاشر", slug: "tenth-science", grade: "TENTH" as const };
+const eleventhSubject = { ...subject, id: 3, name: "فيزياء حادي عشر", slug: "eleventh-physics", grade: "ELEVENTH" as const };
 const driveLink = { id: 1, title: "الفرع العلمي", description: "شرح", subjectId: 1, driveUrl: "https://drive.google.com/one", sortOrder: 1, isActive: true, createdAt: "2026", updatedAt: "2026", subject };
 const second = { ...driveLink, id: 2, title: "الفرع الأدبي", driveUrl: "https://drive.google.com/two", sortOrder: 2 };
 beforeEach(() => {
-  mocks.getSubjects.mockResolvedValue([subject]); mocks.getDriveLinks.mockResolvedValue([driveLink, second]);
+  mocks.getSubjects.mockResolvedValue([subject, tenthSubject, eleventhSubject]); mocks.getDriveLinks.mockResolvedValue([driveLink, second]);
   mocks.create.mockResolvedValue(driveLink); mocks.update.mockResolvedValue(driveLink); mocks.status.mockResolvedValue(driveLink);
   mocks.remove.mockResolvedValue({ id: 1 }); mocks.reorder.mockResolvedValue(null);
 });
@@ -35,7 +37,31 @@ describe("AdminDriveLinksPage", () => {
     expect(mocks.getDriveLinks).toHaveBeenCalledWith({ status: "all", subjectId: 1 });
     await user.selectOptions(screen.getByLabelText("الحالة"), "inactive");
     await user.selectOptions(screen.getByLabelText("الصف"), "ELEVENTH");
-    await waitFor(() => expect(mocks.getDriveLinks).toHaveBeenLastCalledWith({ status: "inactive", subjectId: 1, grade: "ELEVENTH" }));
+    await waitFor(() => expect(mocks.getDriveLinks).toHaveBeenLastCalledWith({ status: "inactive", grade: "ELEVENTH" }));
+  });
+  it.each([
+    ["TAWJIHI", "الرياضيات", ["علوم عاشر", "فيزياء حادي عشر"]],
+    ["TENTH", "علوم عاشر", ["الرياضيات", "فيزياء حادي عشر"]],
+    ["ELEVENTH", "فيزياء حادي عشر", ["الرياضيات", "علوم عاشر"]],
+  ] as const)("filters Subject options for %s", async (selectedGrade, expected, excluded) => {
+    const user = userEvent.setup(); render(<AdminDriveLinksPage />); await screen.findAllByText("الفرع العلمي");
+    await user.selectOptions(screen.getByLabelText("الصف"), selectedGrade);
+    const optionLabels = within(screen.getByLabelText("المادة")).getAllByRole("option").map((option) => option.textContent);
+    expect(optionLabels).toEqual(["الكل", expected]);
+    expect(optionLabels[1]).not.toContain("—");
+    excluded.forEach((label) => expect(optionLabels).not.toContain(label));
+  });
+  it("shows all Subjects for the all-grade filter", async () => {
+    render(<AdminDriveLinksPage />); await screen.findAllByText("الفرع العلمي");
+    const optionLabels = within(screen.getByLabelText("المادة")).getAllByRole("option").map((option) => option.textContent);
+    expect(optionLabels).toEqual(["الكل", "الرياضيات — توجيهي", "علوم عاشر — عاشر", "فيزياء حادي عشر — حادي عشر"]);
+  });
+  it("resets a selected Subject when the new grade does not contain it", async () => {
+    const user = userEvent.setup(); render(<AdminDriveLinksPage />); await screen.findAllByText("الفرع العلمي");
+    expect((screen.getByLabelText("المادة") as HTMLSelectElement).value).toBe("1");
+    await user.selectOptions(screen.getByLabelText("الصف"), "TENTH");
+    expect((screen.getByLabelText("المادة") as HTMLSelectElement).value).toBe("");
+    await waitFor(() => expect(mocks.getDriveLinks).toHaveBeenLastCalledWith({ status: "all", grade: "TENTH" }));
   });
   it("validates and creates a link", async () => {
     const user = userEvent.setup(); render(<AdminDriveLinksPage />); await screen.findAllByText("الفرع العلمي");
