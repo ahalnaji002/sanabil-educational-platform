@@ -35,6 +35,24 @@ const existingDriveLinks = [
   { subjectSlug: "technology", title: "فتح المادة", description: "الوصول إلى مجلد تكنولوجيا علمي المعتمد.", driveUrl: "https://drive.google.com/drive/folders/14H3v5eK7JtObTqXcnmuM7jlNItzlGSKC", sortOrder: 1 },
 ] as const;
 
+// Canonical announcements that were previously bundled with the student frontend.
+const seedAnnouncements = [
+  {
+    title: "سند لكبار البلد",
+    content: "تعلن منصة سنابل عن خصم بنسبة 50% على بطاقة الصقور الذهبية لجميع المواد. تابع إعلانات المنصة لمعرفة تفاصيل التسجيل والاستفادة من العرض.",
+    imageUrl: "/announcements/sanabil-50-off-v2.png",
+    badge: "عرض خاص",
+    sortOrder: 1,
+  },
+  {
+    title: "وجهات المواد أصبحت أقرب",
+    content: "رتبنا لك الوصول إلى المواد في مسار واضح: اختر المادة، ثم الوجهة المناسبة، وأكمل التصفح داخل Google Drive.",
+    imageUrl: "/announcements/subject-destinations.png",
+    badge: "جديد",
+    sortOrder: 2,
+  },
+] as const;
+
 try {
   const passwordHash = await bcrypt.hash(config.SEED_ADMIN_PASSWORD, 12);
   await db.admin.upsert({
@@ -75,7 +93,14 @@ try {
     }
   }
 
-  console.log(`Seed completed: super admin, ${String(seedGrades.length)} Grades, ${String(seedSubjects.length)} Subjects, and preserved Drive links`);
+  for (const announcement of seedAnnouncements) {
+    const alreadyStored = await db.announcement.findFirst({ where: { title: announcement.title }, select: { id: true } });
+    if (!alreadyStored) {
+      await db.announcement.create({ data: { ...announcement, isActive: true } });
+    }
+  }
+
+  console.log(`Seed completed: super admin, ${String(seedGrades.length)} Grades, ${String(seedSubjects.length)} Subjects, preserved Drive links, and missing canonical Announcements`);
 } finally {
   await db.$disconnect();
 }

@@ -1,14 +1,26 @@
 export type Announcement = {
   id: number;
   title: string;
-  summary: string;
-  details: string;
-  image: string | null;
+  content: string;
   badge: string | null;
+  imageUrl: string | null;
   ctaLabel: string | null;
   ctaUrl: string | null;
-  isActive: boolean;
   sortOrder: number;
+};
+
+export type AdminAnnouncement = Announcement & {
+  isActive: boolean;
   startsAt: string | null;
   endsAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
+
+export type AnnouncementStatus = "active" | "inactive" | "all";
+export type AnnouncementVisibility = "current" | "scheduled" | "expired" | "all";
+export type AnnouncementInput = Omit<AdminAnnouncement, "id" | "imageUrl" | "createdAt" | "updatedAt"> & {
+  image: File | null;
+  removeImage: boolean;
+};
+export type AnnouncementFilters = { status: AnnouncementStatus; visibility: AnnouncementVisibility };

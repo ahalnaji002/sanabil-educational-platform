@@ -2,10 +2,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SubjectsSection } from "@/components/subjects-section";
 import { AnnouncementsSection } from "@/components/announcements-section";
-import { announcementService } from "@/services/announcement-service";
 
-export default async function HomePage() {
-  const announcements = await announcementService.getActiveAnnouncements();
+export default function HomePage() {
   return (
     <>
       <SiteHeader />
@@ -41,7 +39,7 @@ export default async function HomePage() {
             </a>
           </div>
         </section>
-        <AnnouncementsSection announcements={announcements} />
+        <AnnouncementsSection />
         <SubjectsSection />
         <section id="how-it-works" aria-labelledby="how-it-works-heading" className="section-reveal scroll-mt-24 bg-white px-5 py-12 sm:px-8">
           <div className="mx-auto max-w-6xl">

@@ -3,12 +3,15 @@
 import { createContext, useContext } from "react";
 import type { Admin } from "../../types/admin";
 
-const AdminContext = createContext<Admin | null>(null);
+type AdminContextValue = { admin: Admin; setAdmin: (admin: Admin) => void };
+const AdminContext = createContext<AdminContextValue | null>(null);
 
 export const AdminProvider = AdminContext.Provider;
 
 export function useAdmin() {
-  const admin = useContext(AdminContext);
-  if (!admin) throw new Error("useAdmin must be used inside the protected admin layout");
-  return admin;
+  const context = useContext(AdminContext);
+  if (!context) throw new Error("useAdmin must be used inside the protected admin layout");
+  return context.admin;
 }
+
+export function useAdminContext() { const context = useContext(AdminContext); if (!context) throw new Error("useAdminContext must be used inside the protected admin layout"); return context; }

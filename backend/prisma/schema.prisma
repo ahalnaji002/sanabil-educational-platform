@@ -71,3 +71,22 @@ model DriveLink {
   @@index([subjectId, isActive, sortOrder])
   @@map("drive_links")
 }
+
+model Announcement {
+  id        Int       @id @default(autoincrement())
+  title     String    @db.VarChar(180)
+  content   String    @db.Text
+  badge     String?   @db.VarChar(80)
+  imageUrl  String?   @map("image_url") @db.VarChar(2048)
+  ctaLabel  String?   @map("cta_label") @db.VarChar(120)
+  ctaUrl    String?   @map("cta_url") @db.VarChar(2048)
+  sortOrder Int       @default(0) @map("sort_order")
+  isActive  Boolean   @default(true) @map("is_active")
+  startsAt  DateTime? @map("starts_at")
+  endsAt    DateTime? @map("ends_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("announcements")
+}

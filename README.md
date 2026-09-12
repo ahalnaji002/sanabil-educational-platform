@@ -17,7 +17,7 @@ The repository is split into independently deployable applications:
 - Student subject discovery and Drive destinations use unauthenticated public content APIs.
 - Safe Google Drive destination behavior: links open in a new tab only when an approved URL exists.
 - Official Sanabil logo and Alexandria Arabic typography.
-- Local, ordered announcements with an accessible details dialog.
+- API-driven, ordered and scheduled announcements with optional uploaded images and an accessible details dialog.
 - Responsive footer with direct phone and WhatsApp contact links.
 - Arabic RTL frontend foundation with Sanabil navy and gold branding.
 - Express REST API foundation, health endpoint, and HttpOnly cookie-based admin authentication.
@@ -25,8 +25,10 @@ The repository is split into independently deployable applications:
 - Protected Arabic grade management at `/admin/dashboard/grades` with add, edit, activate/deactivate, subject counts, and persisted ordering.
 - Protected Arabic subject management at `/admin/dashboard/subjects` with dynamic Grade/status filters, create, edit, activate, and soft-deactivate actions.
 - Protected Arabic Drive Link management at `/admin/dashboard/drive-links` with combined filters, create/edit, explicit activation, permanent deletion, and per-Subject reordering.
+- Protected Arabic Announcement management at `/admin/dashboard/announcements` with create/edit, activation, scheduling, CTA validation, and persisted ordering.
+- Admin profile and password settings at `/admin/dashboard/settings`, plus real active-content counts on the dashboard.
 - Dynamic database-backed Grades and protected admin/public Grade and Subject APIs.
-- Prisma entities: `Admin`, `Grade`, `Subject`, and `DriveLink`.
+- Prisma entities: `Admin`, `Grade`, `Subject`, `DriveLink`, and `Announcement`.
 - A subject owns zero or more ordered Drive destination links.
 - Environment templates keep credentials and secrets out of source control.
 
@@ -73,13 +75,13 @@ npm run dev:frontend
 
 Open http://localhost:3000 after starting both applications. The browser loads active Grades from `/api/public/grades` in administrator-defined order, then requests active Subjects using the selected Grade slug through `/api/public/subjects?grade=<slug>`. Opening a Subject requests its active links from `/api/public/subjects/:slug/drive-links`. Empty grades and Subjects show friendly Arabic states; deactivating a Grade hides both its Subjects and Drive Links from students without deleting data.
 
-Announcement content is maintained in frontend/src/data/announcements.ts and is accessed only through announcementService. Active/date filtering and ordering are handled by the service so it can later be replaced with an API implementation.
+Announcement content is managed through the protected admin page and loaded from `/api/public/announcements`. An admin may optionally upload a JPEG, PNG, or WebP image up to 5 MB; runtime files are stored under `backend/uploads/announcements` and must be kept persistent and included in server backups. Production reverse proxies must allow request bodies of at least 5 MB (for Nginx, use `client_max_body_size 6m;`). The backend is the only production source of truth; inactive, future, and expired announcements are excluded from the student homepage.
 
-Admin users sign in at `/admin/login`. The frontend validates the existing HttpOnly-cookie session through the configured API and protects `/admin/dashboard` before rendering management content. Grades, Subjects, and Drive Links are enabled; only Announcements remain marked as upcoming.
+Admin users sign in at `/admin/login`. The frontend validates the existing HttpOnly-cookie session through the configured API and protects `/admin/dashboard` before rendering management content. Grades, Subjects, Drive Links, Announcements, and Settings are enabled. The dashboard obtains active counts from `/api/admin/dashboard/summary`.
 
 Grade management is available at `/admin/dashboard/grades`; `عرض المواد` opens `/admin/dashboard/subjects?gradeId=<id>`. Grades are never hard-deleted through the admin API. Subject management remains at `/admin/dashboard/subjects`, and its `إدارة الروابط` action opens the selected Subject in `/admin/dashboard/drive-links?subjectId=<id>`. Subject `DELETE` performs reversible deactivation; Drive Link status changes use the dedicated status endpoint, while Drive Link `DELETE` is intentionally permanent. New links must use HTTPS and the exact `drive.google.com` hostname. Ordering is scoped to each Subject and persisted immediately.
 
-The current discount announcement uses the supplied local image at frontend/public/announcements/sanabil-50-off-v2.png. Its details dialog presents the image as a softened background with a dark lower gradient behind the announcement text.
+Profile settings update the authenticated admin by database ID, so changing the normalized unique email does not end the current session. Password changes require the current password plus at least eight characters, one uppercase letter, one lowercase letter, one digit, and matching confirmation. The current session remains valid. `SEED_ADMIN_*` variables are only for initial database bootstrap and are not used for routine profile editing.
 
 Run project checks:
 
@@ -94,7 +96,7 @@ npm run build
 
 The frontend uses Next.js 16, React 19, Axios, Tailwind CSS 4, TypeScript, ESLint, Vitest, and frontend-only Testing Library/jsdom development dependencies.
 
-The backend uses Express 5, Prisma, MySQL, Zod, bcrypt, JSON Web Tokens, Helmet, CORS, cookie-parser, TypeScript, ESLint, Supertest, and Vitest.
+The backend uses Express 5, Prisma, MySQL, Zod, Multer, bcrypt, JSON Web Tokens, Helmet, CORS, cookie-parser, TypeScript, ESLint, Supertest, and Vitest.
 
 ## Vercel deployment
 

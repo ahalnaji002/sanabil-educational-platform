@@ -36,7 +36,7 @@ export function AdminDashboardGuard({ children }: { children: ReactNode }) {
 
   if (admin) {
     return (
-      <AdminProvider value={admin}>
+      <AdminProvider value={{ admin, setAdmin }}>
         <DashboardShell admin={admin} onLoggedOut={() => setAdmin(null)}>{children}</DashboardShell>
       </AdminProvider>
     );

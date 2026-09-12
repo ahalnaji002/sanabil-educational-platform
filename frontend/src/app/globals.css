@@ -79,3 +79,65 @@ dialog[open] { opacity: 1; transform: translateY(0) scale(1); }
     transform: translateY(0);
   }
 }
+
+.admin-name-live {
+  inset-inline-start: 0;
+  position: absolute;
+  top: 0;
+}
+
+.admin-name-smoke-cursor {
+  display: inline-block;
+  position: relative;
+}
+
+.admin-name-smoke-cursor::before,
+.admin-name-smoke-cursor::after {
+  border-radius: 999px;
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.admin-name-smoke-cursor::after {
+  animation: admin-name-smoke-puff 720ms ease-out both;
+  background: rgba(255, 255, 255, .62);
+  box-shadow: -.12em -.08em .25em rgba(255,255,255,.6), .16em .04em .3em rgba(229,185,79,.62), 0 -.28em .38em rgba(255,255,255,.5);
+  filter: blur(4px);
+  height: .6em;
+  inset-inline-end: -.22em;
+  pointer-events: none;
+  top: .12em;
+  width: .6em;
+}
+
+.admin-name-smoke-cursor::before {
+  animation: admin-name-smoke-wisp 820ms ease-out 70ms both;
+  background: rgba(229, 185, 79, .55);
+  box-shadow: 0 0 .35em rgba(255,255,255,.55);
+  filter: blur(5px);
+  height: .42em;
+  inset-inline-end: -.05em;
+  top: -.05em;
+  width: .42em;
+}
+
+@keyframes admin-name-smoke-puff {
+  from { opacity: .72; transform: translateY(.18em) scale(.6); }
+  45% { opacity: .62; }
+  to { opacity: 0; transform: translateY(-.85em) translateX(.16em) scale(1.65); }
+}
+
+@keyframes admin-name-smoke-wisp {
+  from { opacity: .58; transform: translateY(.1em) scale(.7); }
+  to { opacity: 0; transform: translateY(-1em) translateX(-.2em) scale(1.4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-name-smoke-cursor::before,
+  .admin-name-smoke-cursor::after {
+    animation: none;
+    display: none;
+  }
+}

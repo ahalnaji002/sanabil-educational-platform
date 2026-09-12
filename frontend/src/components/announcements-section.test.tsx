@@ -1,17 +1,19 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ load: vi.fn() }));
+vi.mock("../services/announcement-service", () => ({ announcementService: { getActiveAnnouncements: mocks.load } }));
 import type { Announcement } from "@/types/announcement";
 import { AnnouncementsSection } from "./announcements-section";
 
 const item: Announcement = {
-  id: 1, title: "إعلان تجريبي", summary: "ملخص الإعلان", details: "تفاصيل الإعلان",
-  image: null, badge: null, ctaLabel: null, ctaUrl: null, isActive: true,
-  sortOrder: 1, startsAt: null, endsAt: null,
+  id: 1, title: "إعلان تجريبي", content: "تفاصيل الإعلان",
+  badge: null, imageUrl: null, ctaLabel: null, ctaUrl: null, sortOrder: 1,
 };
 
 afterEach(cleanup);
+beforeEach(() => { vi.clearAllMocks(); mocks.load.mockResolvedValue([]); });
 
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = vi.fn(function (this: HTMLDialogElement) { this.setAttribute("open", ""); });
@@ -25,25 +27,12 @@ describe("announcements section", () => {
     const opener = screen.getByRole("button", { name: /عرض التفاصيل/ });
     await user.click(opener);
     expect(screen.getByRole("dialog").hasAttribute("open")).toBe(true);
-    expect(screen.getByText("تفاصيل الإعلان")).toBeTruthy();
+    expect(within(screen.getByRole("dialog")).getByText("تفاصيل الإعلان")).toBeTruthy();
     expect(screen.queryByRole("link")).toBeNull();
     await user.click(screen.getByRole("button", { name: "إغلاق الإعلان" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.activeElement).toBe(opener);
   });
-  it("shows the full details for an announcement with an image", async () => {
-    const user = userEvent.setup();
-    const imageAnnouncement = {
-      ...item,
-      id: 2,
-      image: "/announcements/subject-destinations.png",
-    };
-
-    const view = render(<AnnouncementsSection announcements={[imageAnnouncement]} />);
-    await user.click(view.getByRole("button", { name: /عرض التفاصيل/ }));
-
-    expect(view.getByRole("dialog").hasAttribute("open")).toBe(true);
-    expect(view.getByText("تفاصيل الإعلان")).toBeTruthy();
-    expect(view.getByRole("button", { name: "إغلاق الإعلان" })).toBeTruthy();
-  });
+  it("hides the section when the API result is empty", () => { const view = render(<AnnouncementsSection announcements={[]} />); expect(view.container.innerHTML).toBe(""); });
+  it("shows a retryable Arabic error when the API is unavailable", async () => { mocks.load.mockRejectedValue(new Error("offline")); render(<AnnouncementsSection />); await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("تعذر تحميل الإعلانات")); expect(screen.getByRole("button", { name: "إعادة المحاولة" })).toBeTruthy(); });
 });

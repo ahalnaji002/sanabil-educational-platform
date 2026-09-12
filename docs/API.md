@@ -105,3 +105,30 @@ GET /api/public/subjects/:slug/drive-links
 ```
 
 No authentication is required. The Subject and its parent Grade must both exist and be active. The response includes safe Subject/Grade identity plus active Drive Links only (`id`, `title`, `description`, `driveUrl`, `sortOrder`), ordered by `sortOrder`, then `id`. Missing or inactive content returns the standard not-found response.
+
+## Admin Announcements
+
+All routes require an authenticated admin cookie. Announcements use activation/deactivation; there is no hard-delete endpoint.
+
+```text
+GET    /api/admin/announcements?status=active|inactive|all&visibility=current|scheduled|expired|all
+GET    /api/admin/announcements/:id
+POST   /api/admin/announcements
+PUT    /api/admin/announcements/:id
+PATCH  /api/admin/announcements/:id/status
+PATCH  /api/admin/announcements/reorder
+```
+
+Create and update accept `multipart/form-data`. The optional file field is `image` (JPEG, PNG, or WebP; maximum 5 MB), and `removeImage=true` removes the current image during an update. Other announcement fields retain their existing names.
+
+`title` and `content` are required trimmed text. `badge`, `ctaLabel`, `ctaUrl`, `startsAt`, and `endsAt` are nullable. CTA label and URL must be provided together, and the URL must be valid HTTPS. `sortOrder` is a non-negative integer; create may omit it to append. ISO date-times are accepted, and `endsAt` cannot precede `startsAt`. Reordering accepts unique positive IDs and non-negative positions and runs transactionally.
+
+## Public Announcements
+
+`GET /api/public/announcements` requires no authentication. It returns safe text/image/CTA fields only for active announcements where the current time is on or after `startsAt` when present and on or before `endsAt` when present. Results are ordered by `sortOrder`, then ID.
+
+## Dashboard and Profile
+
+`GET /api/admin/dashboard/summary` returns active Grade, Subject, Drive Link, and Announcement counts. Subject and Drive Link counts respect their active parent hierarchy.
+
+`PUT /api/admin/profile` updates the current admin's trimmed name and normalized unique email. `PUT /api/admin/profile/password` requires `currentPassword`, a strong `newPassword`, and matching `passwordConfirmation`. A strong password has at least eight characters, one uppercase letter, one lowercase letter, and one digit. Password changes are bcrypt-hashed and preserve the current session. `GET /api/auth/me` remains the safe authenticated profile read endpoint.

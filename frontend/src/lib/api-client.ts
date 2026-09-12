@@ -13,6 +13,12 @@ export function assertApiConfigured() {
   if (!apiUrl) throw new ApiConfigurationError();
 }
 
+export function resolveAnnouncementImageUrl(value: string | null) {
+  if (!value) return null;
+  if (value.startsWith("/uploads/")) return apiUrl ? `${apiUrl}${value}` : null;
+  return value;
+}
+
 export const apiClient = axios.create({
   ...(apiUrl ? { baseURL: apiUrl } : {}),
   withCredentials: true,

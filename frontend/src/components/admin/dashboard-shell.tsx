@@ -9,11 +9,12 @@ import { adminAuthService } from "../../services/admin-auth-service";
 import type { Admin } from "../../types/admin";
 
 const navigation = [
-  { label: "الرئيسية", href: "/admin/dashboard", enabled: true },
-  { label: "الصفوف", href: "/admin/dashboard/grades", enabled: true },
-  { label: "المواد", href: "/admin/dashboard/subjects", enabled: true },
-  { label: "الروابط", href: "/admin/dashboard/drive-links", enabled: true },
-  { label: "الإعلانات", href: "/admin/dashboard/announcements", enabled: false },
+  { label: "الرئيسية", href: "/admin/dashboard" },
+  { label: "الصفوف", href: "/admin/dashboard/grades" },
+  { label: "المواد", href: "/admin/dashboard/subjects" },
+  { label: "الروابط", href: "/admin/dashboard/drive-links" },
+  { label: "الإعلانات", href: "/admin/dashboard/announcements" },
+  { label: "الإعدادات", href: "/admin/dashboard/settings" },
 ] as const;
 
 function SidebarContent({ admin, pathname, onNavigate, onLogout, loggingOut }: {
@@ -39,16 +40,9 @@ function SidebarContent({ admin, pathname, onNavigate, onLogout, loggingOut }: {
         <ul className="space-y-2">
           {navigation.map((item) => (
             <li key={item.href}>
-              {item.enabled ? (
-                <Link href={item.href} onClick={onNavigate} aria-current={pathname === item.href ? "page" : undefined} className={`flex min-h-11 items-center rounded-xl px-4 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${pathname === item.href ? "bg-[var(--sanabil-gold)] text-[var(--sanabil-navy)]" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}>
-                  {item.label}
-                </Link>
-              ) : (
-                <span aria-disabled="true" className="flex min-h-11 cursor-not-allowed items-center justify-between rounded-xl px-4 font-semibold text-slate-400">
-                  <span>{item.label}</span>
-                  <small className="text-[10px]">قريبًا</small>
-                </span>
-              )}
+              <Link href={item.href} onClick={onNavigate} aria-current={pathname === item.href ? "page" : undefined} className={`flex min-h-11 items-center rounded-xl px-4 font-extrabold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${pathname === item.href ? "bg-[var(--sanabil-gold)] text-[var(--sanabil-navy)]" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}>
+                {item.label}
+              </Link>
             </li>
           ))}
         </ul>
@@ -69,6 +63,7 @@ export function DashboardShell({ admin, children, onLoggedOut }: { admin: Admin;
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
+  const currentPage = navigation.find((item) => item.href === pathname);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -113,7 +108,7 @@ export function DashboardShell({ admin, children, onLoggedOut }: { admin: Admin;
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur sm:px-8">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-bold text-[var(--sanabil-gold-dark)]">لوحة الإدارة</p>
+              <p className="text-xs font-bold text-[var(--sanabil-gold-dark)]">لوحة الإدارة{currentPage && currentPage.href !== "/admin/dashboard" ? ` ← ${currentPage.label}` : ""}</p>
               <p className="mt-1 font-extrabold text-[var(--sanabil-navy)]">منصة سنابل التعليمية</p>
             </div>
             <button type="button" aria-label="فتح قائمة الإدارة" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)} className="flex size-11 items-center justify-center rounded-xl border border-slate-200 text-2xl font-bold text-[var(--sanabil-navy)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)] lg:hidden">☰</button>
