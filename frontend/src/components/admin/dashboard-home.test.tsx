@@ -7,9 +7,11 @@ import { DashboardHome } from "./dashboard-home";
 describe("DashboardHome", () => {
   it("links implemented sections and marks only Announcements as coming soon", () => {
     render(<DashboardHome />);
-    expect(screen.getAllByRole("link", { name: "فتح" }).map((link) => link.getAttribute("href"))).toEqual([
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/admin/dashboard/grades", "/admin/dashboard/subjects", "/admin/dashboard/drive-links",
     ]);
+    expect(screen.getAllByRole("link")[0]?.textContent).toContain("الصفوف");
+    expect(screen.queryByText("فتح")).toBeNull();
     expect(screen.getAllByText("قريبًا")).toHaveLength(1);
     expect(screen.getByText("الإعلانات").closest("article")?.textContent).toContain("قريبًا");
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useAdmin } from "./admin-context";
 
 const sections = [
@@ -25,15 +26,31 @@ export function DashboardHome() {
       <section className="mt-8" aria-labelledby="management-sections-heading">
         <h2 id="management-sections-heading" className="text-xl font-black text-[var(--sanabil-navy)]">أقسام الإدارة</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          {sections.map((section) => (
-            <article key={section.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)]">
-              <div className="flex items-center justify-between gap-4">
-                <h3 className="font-extrabold text-[var(--sanabil-navy)]">{section.title}</h3>
-                {section.href ? <a href={section.href} className="rounded-full bg-[var(--sanabil-gold)] px-3 py-1 text-xs font-bold text-[var(--sanabil-navy)]">فتح</a> : <span className="rounded-full bg-[var(--sanabil-gold-soft)] px-3 py-1 text-xs font-bold text-[var(--sanabil-navy)]">قريبًا</span>}
-              </div>
-              <p className="mt-3 text-sm leading-7 text-slate-600">{section.description}</p>
-            </article>
-          ))}
+          {sections.map((section) => {
+            const content = (
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="font-extrabold text-[var(--sanabil-navy)]">{section.title}</h3>
+                  {!section.href ? <span className="rounded-full bg-[var(--sanabil-gold-soft)] px-3 py-1 text-xs font-bold text-[var(--sanabil-navy)]">قريبًا</span> : null}
+                </div>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{section.description}</p>
+              </>
+            );
+
+            return section.href ? (
+              <Link
+                key={section.title}
+                href={section.href}
+                className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)] transition duration-200 hover:-translate-y-1 hover:border-[var(--sanabil-gold)] hover:shadow-[0_16px_40px_rgba(7,27,54,.12)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)] motion-reduce:transform-none motion-reduce:transition-none"
+              >
+                {content}
+              </Link>
+            ) : (
+              <article key={section.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)]">
+                {content}
+              </article>
+            );
+          })}
         </div>
       </section>
     </div>

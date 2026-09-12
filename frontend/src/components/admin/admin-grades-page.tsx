@@ -6,7 +6,7 @@ import { AdminGradeError, adminGradeService } from "../../services/admin-grade-s
 import type { AdminGrade, CreateGradeInput } from "../../types/grade";
 import { GradeFormModal } from "./grade-form-modal";
 
-const Badge = ({ active }: { active: boolean }) => <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${active ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>{active ? "نشط" : "غير نشط"}</span>;
+const Badge = ({ active }: { active: boolean }) => <span className={`inline-flex min-h-7 shrink-0 self-start items-center justify-center whitespace-nowrap rounded-full px-3 py-1 text-xs font-extrabold leading-none ${active ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>{active ? "نشط" : "غير نشط"}</span>;
 export function AdminGradesPage() {
   const router = useRouter(); const [grades, setGrades] = useState<AdminGrade[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [editing, setEditing] = useState<AdminGrade | null>(null); const [formOpen, setFormOpen] = useState(false); const [busyId, setBusyId] = useState<number | null>(null); const [reordering, setReordering] = useState(false);
   const unauthorized = useCallback((requestError: unknown) => { if (requestError instanceof AdminGradeError && requestError.kind === "unauthorized") { router.replace("/admin/login"); return true; } return false; }, [router]);
