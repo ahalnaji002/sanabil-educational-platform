@@ -13,7 +13,10 @@ export const validateRequest = (schemas: Schemas): RequestHandler => (req, _res,
       next(new ApiError(400, "Validation failed", errors));
       return;
     }
-    Object.assign(req[key], result.data);
+    // Express 5 exposes query through a getter, so mutating the temporary parsed
+    // object does not preserve Zod coercions/defaults for downstream handlers.
+    if (key === "query") Object.defineProperty(req, "query", { value: result.data, writable: true, configurable: true });
+    else Object.assign(req[key], result.data);
   }
   next();
 };

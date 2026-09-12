@@ -1,7 +1,7 @@
 import type { Grade } from "@/types/grade";
 
 export const localGrades: readonly Grade[] = [
-  { id: "tenth", label: "عاشر" },
-  { id: "eleventh", label: "حادي عشر" },
-  { id: "tawjihi", label: "توجيهي" },
+  { id: "TENTH", label: "عاشر" },
+  { id: "ELEVENTH", label: "حادي عشر" },
+  { id: "TAWJIHI", label: "توجيهي" },
 ] as const;

@@ -1,22 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Grade, GradeId } from "@/types/grade";
-import type { Subject } from "@/types/subject";
+import { publicContentService } from "../services/public-content-service";
+import type { PublicSubject } from "@/types/public-content";
 import { GradeSelector } from "./grade-selector";
 import { SubjectCard } from "./subject-card";
 
 type SubjectsSectionProps = {
   grades: readonly Grade[];
-  subjects: readonly Subject[];
 };
 
-export function SubjectsSection({ grades, subjects }: SubjectsSectionProps) {
+export function SubjectsSection({ grades }: SubjectsSectionProps) {
   const [selectedGradeId, setSelectedGradeId] = useState<GradeId | null>(null);
+  const [subjects, setSubjects] = useState<PublicSubject[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const requestId = useRef(0);
+  const cache = useRef(new Map<GradeId, PublicSubject[]>());
   const selectedGrade = grades.find((grade) => grade.id === selectedGradeId);
-  const visibleSubjects = selectedGradeId
-    ? subjects.filter((subject) => subject.gradeId === selectedGradeId)
-    : [];
+
+  async function selectGrade(gradeId: GradeId) {
+    setSelectedGradeId(gradeId);
+    setLoading(true);
+    setError(null);
+    const cached = cache.current.get(gradeId);
+    if (cached) {
+      setSubjects(cached);
+      setLoading(false);
+      return;
+    }
+    setSubjects([]);
+    const currentRequest = ++requestId.current;
+    try {
+      const items = await publicContentService.getPublicSubjects(gradeId);
+      cache.current.set(gradeId, items);
+      if (currentRequest === requestId.current) setSubjects(items);
+    } catch {
+      if (currentRequest === requestId.current) setError("تعذر تحميل المواد حاليًا. حاول مجددًا.");
+    } finally {
+      if (currentRequest === requestId.current) setLoading(false);
+    }
+  }
 
   return (
     <section id="subjects" className="section-reveal scroll-mt-24 px-5 py-16 sm:px-8 sm:py-24">
@@ -32,7 +57,7 @@ export function SubjectsSection({ grades, subjects }: SubjectsSectionProps) {
         <GradeSelector
           grades={grades}
           selectedGradeId={selectedGradeId}
-          onSelect={setSelectedGradeId}
+          onSelect={(gradeId) => void selectGrade(gradeId)}
         />
 
         {selectedGrade ? (
@@ -40,15 +65,19 @@ export function SubjectsSection({ grades, subjects }: SubjectsSectionProps) {
             <h3 className="text-2xl font-black text-[var(--sanabil-navy)]">
               مواد {selectedGrade.label}
             </h3>
-            {visibleSubjects.length ? (
+            {loading ? (
+              <p className="mt-6 rounded-[1.75rem] border border-slate-200 bg-white px-6 py-12 text-center font-bold text-slate-600">جارٍ تحميل المواد...</p>
+            ) : error ? (
+              <p role="alert" className="mt-6 rounded-[1.75rem] border border-red-200 bg-red-50 px-6 py-12 text-center font-bold text-red-800">{error}</p>
+            ) : subjects.length ? (
               <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {visibleSubjects.map((subject) => (
+                {subjects.map((subject) => (
                   <SubjectCard key={subject.id} subject={subject} />
                 ))}
               </div>
             ) : (
               <p className="mt-6 rounded-[1.75rem] border border-dashed border-[var(--sanabil-gold)] bg-white px-6 py-12 text-center font-bold text-slate-600">
-                سيتم إضافة مواد هذا الصف قريبًا
+                لا توجد مواد متاحة لهذا الصف حاليًا.
               </p>
             )}
           </div>

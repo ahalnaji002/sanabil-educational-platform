@@ -12,10 +12,9 @@ The repository is split into independently deployable applications:
 ## Features
 
 - Student-facing Arabic RTL homepage with a responsive grade-first subject flow.
-- Pre-rendered subject destination pages at /subjects/[slug].
+- Database-driven subject destination pages at `/subjects/[slug]`.
 - Compact subject-to-subject quick navigation on every subject destination page.
-- Seven local subjects, including Biology and Scientific Technology.
-- Replaceable local subject service; no backend or database is required for the frontend MVP.
+- Student subject discovery and Drive destinations use unauthenticated public content APIs.
 - Safe Google Drive destination behavior: links open in a new tab only when an approved URL exists.
 - Official Sanabil logo and Alexandria Arabic typography.
 - Local, ordered announcements with an accessible details dialog.
@@ -24,6 +23,7 @@ The repository is split into independently deployable applications:
 - Express REST API foundation, health endpoint, and HttpOnly cookie-based admin authentication.
 - Arabic admin login and protected responsive dashboard shell at `/admin/login` and `/admin/dashboard`.
 - Protected Arabic subject management at `/admin/dashboard/subjects` with server-side grade/status filters, create, edit, activate, and soft-deactivate actions.
+- Protected Arabic Drive Link management at `/admin/dashboard/drive-links` with combined filters, create/edit, explicit activation, permanent deletion, and per-Subject reordering.
 - Fixed database grade enum (`TENTH`, `ELEVENTH`, `TAWJIHI`) and protected admin/public subject APIs.
 - Initial Prisma entities: `Admin`, `Subject`, and `DriveLink` only.
 - A subject owns zero or more ordered Drive destination links.
@@ -61,7 +61,7 @@ npm run prisma:migrate --workspace backend
 npm run prisma:seed --workspace backend
 ```
 
-The seed reads credentials from the environment, hashes the password, and upserts by normalized email. It also upserts seven local development subjects across the three fixed grades without creating Drive links or fake Drive URLs.
+The seed reads credentials from the environment, hashes the password, and upserts by normalized email. It upserts the existing Subjects and idempotently preserves the eight real Google Drive destinations that previously lived in frontend data; it creates no fake Drive URLs and does not overwrite existing matching links.
 
 Start the applications in separate terminals:
 
@@ -70,13 +70,13 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
-For the frontend-only MVP, run npm run dev:frontend and open http://localhost:3000. Students select عاشر, حادي عشر, or توجيهي before seeing grade-specific subjects; current subject content belongs to توجيهي, while the other grades show a coming-soon state. Grade options are maintained in frontend/src/data/grades.ts and subjects are associated through their gradeId in frontend/src/data/subjects.ts. Replace a null driveUrl only with its approved Sanabil Google Drive destination.
+Open http://localhost:3000 after starting both applications. Students select عاشر, حادي عشر, or توجيهي; the browser then requests active Subjects for that grade from `/api/public/subjects`. Opening a Subject requests its active links from `/api/public/subjects/:slug/drive-links`. Empty grades and Subjects show friendly Arabic states, while inactive content remains hidden.
 
 Announcement content is maintained in frontend/src/data/announcements.ts and is accessed only through announcementService. Active/date filtering and ordering are handled by the service so it can later be replaced with an API implementation.
 
-Admin users sign in at `/admin/login`. The frontend validates the existing HttpOnly-cookie session through the configured API and protects `/admin/dashboard` before rendering management content. Dashboard content-management sections are intentionally disabled until their later implementation phases.
+Admin users sign in at `/admin/login`. The frontend validates the existing HttpOnly-cookie session through the configured API and protects `/admin/dashboard` before rendering management content. Subjects and Drive Links are enabled; grades and announcements remain marked as upcoming.
 
-Subject management is available at `/admin/dashboard/subjects`. Admin requests use `/api/admin/subjects`, where `DELETE` performs reversible deactivation rather than physical deletion. The unauthenticated `/api/public/subjects` endpoint exposes active subjects only and is ready for a later student-frontend migration; the current public pages continue using local frontend subject data.
+Subject management is available at `/admin/dashboard/subjects`. Its `إدارة الروابط` action opens the selected Subject in `/admin/dashboard/drive-links?subjectId=<id>`. Subject `DELETE` performs reversible deactivation; Drive Link status changes use the dedicated status endpoint, while Drive Link `DELETE` is intentionally permanent. New links must use HTTPS and the exact `drive.google.com` hostname. Ordering is scoped to each Subject and persisted immediately.
 
 The current discount announcement uses the supplied local image at frontend/public/announcements/sanabil-50-off-v2.png. Its details dialog presents the image as a softened background with a dark lower gradient behind the announcement text.
 
@@ -106,4 +106,4 @@ Create a Vercel project from this repository with these exact settings:
 - Output Directory: leave blank (Next.js default)
 - Node.js Version: 22.x
 
-Set `NEXT_PUBLIC_API_URL` in Vercel to the production API origin. `frontend/vercel.json` declares the Next.js framework; public subject content remains statically pre-rendered, while admin authentication communicates with the existing backend from the browser using credentialed requests.
+Set `NEXT_PUBLIC_API_URL` in Vercel to the production API origin. `frontend/vercel.json` declares the Next.js framework; student content and admin operations communicate with the backend through the shared Axios client.

@@ -10,12 +10,15 @@ import { authRouter } from "./modules/auth/auth.routes.js";
 import { prisma } from "./config/prisma.js";
 import { PrismaSubjectRepository, type SubjectRepository } from "./modules/subjects/subject.repository.js";
 import { adminSubjectRouter, publicSubjectRouter } from "./modules/subjects/subject.routes.js";
+import { PrismaDriveLinkRepository, type DriveLinkRepository } from "./modules/drive-links/drive-link.repository.js";
+import { adminDriveLinkRouter, publicDriveLinkRouter } from "./modules/drive-links/drive-link.routes.js";
 import { sendSuccess } from "./utils/response.js";
 
 export const createApp = (
   config: AppConfig,
   repo: AdminRepository,
   subjectRepository: SubjectRepository = new PrismaSubjectRepository(prisma),
+  driveLinkRepository: DriveLinkRepository = new PrismaDriveLinkRepository(prisma),
 ) => {
   const app = express();
 
@@ -30,7 +33,9 @@ export const createApp = (
   });
   app.use("/api/auth", authRouter(config, repo));
   app.use("/api/admin/subjects", adminSubjectRouter(config, repo, subjectRepository));
+  app.use("/api/admin/drive-links", adminDriveLinkRouter(config, repo, driveLinkRepository, subjectRepository));
   app.use("/api/public/subjects", publicSubjectRouter(subjectRepository));
+  app.use("/api/public/subjects", publicDriveLinkRouter(driveLinkRepository, subjectRepository));
   app.use(notFound);
   app.use(errorHandler);
 

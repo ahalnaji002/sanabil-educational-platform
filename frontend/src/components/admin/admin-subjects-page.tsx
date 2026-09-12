@@ -26,15 +26,17 @@ function StatusBadge({ active }: { active: boolean }) {
   return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-extrabold ${active ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>{active ? "نشط" : "غير نشط"}</span>;
 }
 
-function SubjectActions({ subject, busy, onEdit, onToggle }: {
+function SubjectActions({ subject, busy, onEdit, onToggle, onManageLinks }: {
   subject: AdminSubject;
   busy: boolean;
   onEdit: () => void;
   onToggle: () => void;
+  onManageLinks: () => void;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
       <button type="button" onClick={onEdit} disabled={busy} className="min-h-9 rounded-lg border border-slate-300 px-3 text-sm font-bold text-[var(--sanabil-navy)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)] disabled:opacity-50">تعديل</button>
+      <button type="button" onClick={onManageLinks} disabled={busy} className="min-h-9 rounded-lg border border-[var(--sanabil-gold)] px-3 text-sm font-bold text-[var(--sanabil-navy)] disabled:opacity-50">إدارة الروابط</button>
       <button type="button" onClick={onToggle} disabled={busy} className={`min-h-9 rounded-lg px-3 text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)] disabled:opacity-50 ${subject.isActive ? "border border-red-200 bg-red-50 text-red-800" : "bg-emerald-700 text-white"}`}>{busy ? "جارٍ التنفيذ..." : subject.isActive ? "تعطيل" : "تفعيل"}</button>
     </div>
   );
@@ -155,13 +157,13 @@ export function AdminSubjectsPage() {
               <table className="w-full border-collapse text-right">
                 <thead className="bg-slate-100 text-sm text-slate-700"><tr><th className="px-5 py-4">اسم المادة</th><th className="px-5 py-4">الصف</th><th className="px-5 py-4">slug</th><th className="px-5 py-4">الحالة</th><th className="px-5 py-4">الإجراءات</th></tr></thead>
                 <tbody className="divide-y divide-slate-200">
-                  {subjects.map((subject) => <tr key={subject.id}><td className="px-5 py-4 font-bold text-[var(--sanabil-navy)]">{subject.name}</td><td className="px-5 py-4 text-sm text-slate-700">{getGradeLabel(subject.grade)}</td><td className="px-5 py-4"><code dir="ltr" className="text-xs text-slate-600">{subject.slug}</code></td><td className="px-5 py-4"><StatusBadge active={subject.isActive} /></td><td className="px-5 py-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} /></td></tr>)}
+                  {subjects.map((subject) => <tr key={subject.id}><td className="px-5 py-4 font-bold text-[var(--sanabil-navy)]">{subject.name}</td><td className="px-5 py-4 text-sm text-slate-700">{getGradeLabel(subject.grade)}</td><td className="px-5 py-4"><code dir="ltr" className="text-xs text-slate-600">{subject.slug}</code></td><td className="px-5 py-4"><StatusBadge active={subject.isActive} /></td><td className="px-5 py-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} /></td></tr>)}
                 </tbody>
               </table>
             </div>
 
             <div className="grid gap-4 md:hidden">
-              {subjects.map((subject) => <article key={subject.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)]"><div className="flex items-start justify-between gap-3"><div><h2 className="font-extrabold text-[var(--sanabil-navy)]">{subject.name}</h2><p className="mt-1 text-sm text-slate-600">{getGradeLabel(subject.grade)}</p></div><StatusBadge active={subject.isActive} /></div><code dir="ltr" className="mt-4 block break-all rounded-lg bg-slate-100 px-3 py-2 text-left text-xs text-slate-600">{subject.slug}</code><div className="mt-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} /></div></article>)}
+              {subjects.map((subject) => <article key={subject.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)]"><div className="flex items-start justify-between gap-3"><div><h2 className="font-extrabold text-[var(--sanabil-navy)]">{subject.name}</h2><p className="mt-1 text-sm text-slate-600">{getGradeLabel(subject.grade)}</p></div><StatusBadge active={subject.isActive} /></div><code dir="ltr" className="mt-4 block break-all rounded-lg bg-slate-100 px-3 py-2 text-left text-xs text-slate-600">{subject.slug}</code><div className="mt-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} /></div></article>)}
             </div>
           </>
         )}

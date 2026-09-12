@@ -1,8 +1,8 @@
 import Link from "next/link";
-import type { Subject } from "@/types/subject";
+import type { PublicSubject } from "@/types/public-content";
 
 type SubjectQuickNavigationProps = {
-  subjects: readonly Subject[];
+  subjects: readonly PublicSubject[];
   currentSlug: string;
 };
 

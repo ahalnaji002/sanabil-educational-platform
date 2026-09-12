@@ -2,27 +2,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SubjectQuickNavigation } from "./subject-quick-navigation";
-import type { Subject } from "@/types/subject";
+import type { PublicSubject } from "@/types/public-content";
 
-const subjects: readonly Subject[] = [
-  {
-    id: 1,
-    gradeId: "tawjihi",
-    name: "الرياضيات",
-    slug: "mathematics",
-    icon: "calculator",
-    summary: "رياضيات",
-    links: [],
-  },
-  {
-    id: 2,
-    gradeId: "tawjihi",
-    name: "الفيزياء",
-    slug: "physics",
-    icon: "atom",
-    summary: "فيزياء",
-    links: [],
-  },
+const subjects: readonly PublicSubject[] = [
+  { id: 1, grade: "TAWJIHI", name: "الرياضيات", slug: "mathematics" },
+  { id: 2, grade: "TAWJIHI", name: "الفيزياء", slug: "physics" },
 ];
 
 describe("SubjectQuickNavigation", () => {

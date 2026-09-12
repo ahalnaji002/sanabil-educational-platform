@@ -3,11 +3,9 @@ import { SiteHeader } from "@/components/site-header";
 import { SubjectsSection } from "@/components/subjects-section";
 import { AnnouncementsSection } from "@/components/announcements-section";
 import { localGrades } from "@/data/grades";
-import { subjectService } from "@/services/subject-service";
 import { announcementService } from "@/services/announcement-service";
 
 export default async function HomePage() {
-  const subjects = await subjectService.getSubjects();
   const announcements = await announcementService.getActiveAnnouncements();
   return (
     <>
@@ -45,7 +43,7 @@ export default async function HomePage() {
           </div>
         </section>
         <AnnouncementsSection announcements={announcements} />
-        <SubjectsSection grades={localGrades} subjects={subjects} />
+        <SubjectsSection grades={localGrades} />
         <section id="how-it-works" aria-labelledby="how-it-works-heading" className="section-reveal scroll-mt-24 bg-white px-5 py-12 sm:px-8">
           <div className="mx-auto max-w-6xl">
             <h2 id="how-it-works-heading" className="sr-only">كيف تعمل المنصة</h2>
