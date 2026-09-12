@@ -1,8 +1,8 @@
-import type { Grade, Prisma, PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import type { SubjectRecord, SubjectWriteInput } from "./subject.types.js";
 
 export type RepositorySubjectFilters = {
-  grade?: Grade;
+  gradeId?: number;
   isActive?: boolean;
 };
 
@@ -19,7 +19,8 @@ const subjectSelect = {
   id: true,
   name: true,
   slug: true,
-  grade: true,
+  grade: { select: { id: true, name: true, slug: true, sortOrder: true, isActive: true } },
+  gradeId: true,
   isActive: true,
   createdAt: true,
   updatedAt: true,
@@ -31,10 +32,10 @@ export class PrismaSubjectRepository implements SubjectRepository {
   findMany(filters: RepositorySubjectFilters) {
     return this.db.subject.findMany({
       where: {
-        ...(filters.grade ? { grade: filters.grade } : {}),
+        ...(filters.gradeId ? { gradeId: filters.gradeId } : {}),
         ...(filters.isActive === undefined ? {} : { isActive: filters.isActive }),
       },
-      orderBy: [{ grade: "asc" }, { name: "asc" }, { id: "asc" }],
+      orderBy: [{ grade: { sortOrder: "asc" } }, { name: "asc" }, { id: "asc" }],
       select: subjectSelect,
     });
   }

@@ -14,14 +14,16 @@ import {
   updateSubjectBodySchema,
 } from "./subject.schema.js";
 import { SubjectService } from "./subject.service.js";
+import type { GradeRepository } from "../grades/grade.repository.js";
 
 export const adminSubjectRouter = (
   config: AppConfig,
   adminRepository: AdminRepository,
   subjectRepository: SubjectRepository,
+  gradeRepository: GradeRepository,
 ) => {
   const router = Router();
-  const controller = new SubjectController(new SubjectService(subjectRepository));
+  const controller = new SubjectController(new SubjectService(subjectRepository, gradeRepository));
 
   router.use(authenticateAdmin(config, adminRepository));
   router.get("/", validateRequest({ query: subjectListQuerySchema }), asyncHandler(controller.listAdmin));
@@ -33,9 +35,9 @@ export const adminSubjectRouter = (
   return router;
 };
 
-export const publicSubjectRouter = (subjectRepository: SubjectRepository) => {
+export const publicSubjectRouter = (subjectRepository: SubjectRepository, gradeRepository: GradeRepository) => {
   const router = Router();
-  const controller = new SubjectController(new SubjectService(subjectRepository));
+  const controller = new SubjectController(new SubjectService(subjectRepository, gradeRepository));
   router.get("/", validateRequest({ query: publicSubjectListQuerySchema }), asyncHandler(controller.listPublic));
   return router;
 };

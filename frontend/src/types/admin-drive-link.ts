@@ -1,4 +1,4 @@
-import type { AdminSubject, Grade, SubjectStatus } from "./admin-subject";
+import type { AdminSubject, SubjectStatus } from "./admin-subject";
 
 export type AdminDriveLink = {
   id: number;
@@ -23,5 +23,5 @@ export type CreateDriveLinkInput = {
 };
 
 export type UpdateDriveLinkInput = Omit<CreateDriveLinkInput, "sortOrder"> & { sortOrder: number };
-export type DriveLinkFilters = { status: SubjectStatus; subjectId?: number; grade?: Grade };
+export type DriveLinkFilters = { status: SubjectStatus; subjectId?: number; gradeId?: number };
 export type DriveLinkReorderInput = { subjectId: number; items: { id: number; sortOrder: number }[] };

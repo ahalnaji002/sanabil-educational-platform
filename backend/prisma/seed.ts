@@ -1,20 +1,26 @@
 import "dotenv/config";
-import { AdminRole, Grade, PrismaClient } from "@prisma/client";
+import { AdminRole, PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { parseEnv } from "../src/config/env.js";
 const config = parseEnv(process.env);
 const db = new PrismaClient();
 
+const seedGrades = [
+  { name: "عاشر", slug: "tenth", sortOrder: 1 },
+  { name: "حادي عشر", slug: "eleventh", sortOrder: 2 },
+  { name: "توجيهي", slug: "tawjihi", sortOrder: 3 },
+] as const;
+
 const seedSubjects = [
-  { name: "الرياضيات", slug: "mathematics", grade: Grade.TAWJIHI },
-  { name: "الفيزياء", slug: "physics", grade: Grade.TAWJIHI },
-  { name: "الكيمياء", slug: "chemistry", grade: Grade.TAWJIHI },
-  { name: "اللغة العربية", slug: "arabic", grade: Grade.TAWJIHI },
-  { name: "اللغة الإنجليزية", slug: "english", grade: Grade.TAWJIHI },
-  { name: "أحياء", slug: "biology", grade: Grade.TAWJIHI },
-  { name: "تكنولوجيا علمي", slug: "technology", grade: Grade.TAWJIHI },
-  { name: "الرياضيات - عاشر", slug: "tenth-mathematics", grade: Grade.TENTH },
-  { name: "الرياضيات - حادي عشر", slug: "eleventh-mathematics", grade: Grade.ELEVENTH },
+  { name: "الرياضيات", slug: "mathematics", gradeSlug: "tawjihi" },
+  { name: "الفيزياء", slug: "physics", gradeSlug: "tawjihi" },
+  { name: "الكيمياء", slug: "chemistry", gradeSlug: "tawjihi" },
+  { name: "اللغة العربية", slug: "arabic", gradeSlug: "tawjihi" },
+  { name: "اللغة الإنجليزية", slug: "english", gradeSlug: "tawjihi" },
+  { name: "أحياء", slug: "biology", gradeSlug: "tawjihi" },
+  { name: "تكنولوجيا علمي", slug: "technology", gradeSlug: "tawjihi" },
+  { name: "الرياضيات - عاشر", slug: "tenth-mathematics", gradeSlug: "tenth" },
+  { name: "الرياضيات - حادي عشر", slug: "eleventh-mathematics", gradeSlug: "eleventh" },
 ] as const;
 
 // These are the real, pre-existing student destinations formerly stored in the frontend.
@@ -37,11 +43,22 @@ try {
     create: { name: config.SEED_ADMIN_NAME, email: config.SEED_ADMIN_EMAIL, passwordHash, role: AdminRole.SUPER_ADMIN },
   });
 
-  await Promise.all(seedSubjects.map((subject) => db.subject.upsert({
-    where: { slug: subject.slug },
-    update: { name: subject.name, grade: subject.grade, isActive: true },
-    create: { ...subject, isActive: true },
+  const grades = await Promise.all(seedGrades.map((grade) => db.grade.upsert({
+    where: { slug: grade.slug },
+    update: { name: grade.name, sortOrder: grade.sortOrder, isActive: true },
+    create: { ...grade, isActive: true },
   })));
+  const gradeIds = new Map(grades.map((grade) => [grade.slug, grade.id]));
+
+  await Promise.all(seedSubjects.map(({ gradeSlug, ...subject }) => {
+    const gradeId = gradeIds.get(gradeSlug);
+    if (!gradeId) throw new Error(`Seed Grade missing: ${gradeSlug}`);
+    return db.subject.upsert({
+      where: { slug: subject.slug },
+      update: { name: subject.name, gradeId, isActive: true },
+      create: { ...subject, gradeId, isActive: true },
+    });
+  }));
 
   for (const existingLink of existingDriveLinks) {
     const subject = await db.subject.findUniqueOrThrow({ where: { slug: existingLink.subjectSlug }, select: { id: true } });
@@ -58,7 +75,7 @@ try {
     }
   }
 
-  console.log(`Seed completed: super admin, ${String(seedSubjects.length)} subjects, and preserved Drive links`);
+  console.log(`Seed completed: super admin, ${String(seedGrades.length)} Grades, ${String(seedSubjects.length)} Subjects, and preserved Drive links`);
 } finally {
   await db.$disconnect();
 }

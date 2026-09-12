@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { gradeSchema, subjectStatusSchema } from "../subjects/subject.schema.js";
+import { subjectStatusSchema } from "../subjects/subject.schema.js";
 
 const titleSchema = z.string().trim().min(1, "Title is required").max(160, "Title is too long");
 const descriptionSchema = z.string().trim().max(4000, "Description is too long").nullable().optional()
@@ -21,7 +21,7 @@ export const driveLinkPublicParamsSchema = z.object({
 export const driveLinkListQuerySchema = z.object({
   subjectId: z.coerce.number().int().positive().optional(),
   status: subjectStatusSchema.default("all"),
-  grade: gradeSchema.optional(),
+  gradeId: z.coerce.number().int().positive().optional(),
 }).strict();
 export const createDriveLinkBodySchema = z.object({
   title: titleSchema,

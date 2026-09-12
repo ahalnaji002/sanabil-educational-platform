@@ -10,7 +10,7 @@ import type { Admin } from "../../types/admin";
 
 const navigation = [
   { label: "الرئيسية", href: "/admin/dashboard", enabled: true },
-  { label: "الصفوف", href: "/admin/dashboard/grades", enabled: false },
+  { label: "الصفوف", href: "/admin/dashboard/grades", enabled: true },
   { label: "المواد", href: "/admin/dashboard/subjects", enabled: true },
   { label: "الروابط", href: "/admin/dashboard/drive-links", enabled: true },
   { label: "الإعلانات", href: "/admin/dashboard/announcements", enabled: false },

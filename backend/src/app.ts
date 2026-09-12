@@ -12,6 +12,8 @@ import { PrismaSubjectRepository, type SubjectRepository } from "./modules/subje
 import { adminSubjectRouter, publicSubjectRouter } from "./modules/subjects/subject.routes.js";
 import { PrismaDriveLinkRepository, type DriveLinkRepository } from "./modules/drive-links/drive-link.repository.js";
 import { adminDriveLinkRouter, publicDriveLinkRouter } from "./modules/drive-links/drive-link.routes.js";
+import { PrismaGradeRepository, type GradeRepository } from "./modules/grades/grade.repository.js";
+import { adminGradeRouter, publicGradeRouter } from "./modules/grades/grade.routes.js";
 import { sendSuccess } from "./utils/response.js";
 
 export const createApp = (
@@ -19,6 +21,7 @@ export const createApp = (
   repo: AdminRepository,
   subjectRepository: SubjectRepository = new PrismaSubjectRepository(prisma),
   driveLinkRepository: DriveLinkRepository = new PrismaDriveLinkRepository(prisma),
+  gradeRepository: GradeRepository = new PrismaGradeRepository(prisma),
 ) => {
   const app = express();
 
@@ -32,9 +35,11 @@ export const createApp = (
     sendSuccess(response, 200, "Service is healthy", { status: "ok" });
   });
   app.use("/api/auth", authRouter(config, repo));
-  app.use("/api/admin/subjects", adminSubjectRouter(config, repo, subjectRepository));
+  app.use("/api/admin/grades", adminGradeRouter(config, repo, gradeRepository));
+  app.use("/api/admin/subjects", adminSubjectRouter(config, repo, subjectRepository, gradeRepository));
   app.use("/api/admin/drive-links", adminDriveLinkRouter(config, repo, driveLinkRepository, subjectRepository));
-  app.use("/api/public/subjects", publicSubjectRouter(subjectRepository));
+  app.use("/api/public/grades", publicGradeRouter(gradeRepository));
+  app.use("/api/public/subjects", publicSubjectRouter(subjectRepository, gradeRepository));
   app.use("/api/public/subjects", publicDriveLinkRouter(driveLinkRepository, subjectRepository));
   app.use(notFound);
   app.use(errorHandler);

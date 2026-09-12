@@ -1,10 +1,10 @@
-import type { Grade, Prisma, PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import type { DriveLinkOrderItem, DriveLinkRecord, DriveLinkWriteInput, PublicDriveLink } from "./drive-link.types.js";
 
 export type RepositoryDriveLinkFilters = {
   subjectId?: number;
   isActive?: boolean;
-  grade?: Grade;
+  gradeId?: number;
 };
 
 export interface DriveLinkRepository {
@@ -20,7 +20,7 @@ export interface DriveLinkRepository {
   findPublicBySubjectId(subjectId: number): Promise<PublicDriveLink[]>;
 }
 
-const subjectSelect = { id: true, name: true, slug: true, grade: true, isActive: true } satisfies Prisma.SubjectSelect;
+const subjectSelect = { id: true, name: true, slug: true, gradeId: true, isActive: true, grade: { select: { id: true, name: true, slug: true, isActive: true } } } satisfies Prisma.SubjectSelect;
 const driveLinkSelect = {
   id: true,
   title: true,
@@ -49,7 +49,7 @@ export class PrismaDriveLinkRepository implements DriveLinkRepository {
       where: {
         ...(filters.subjectId ? { subjectId: filters.subjectId } : {}),
         ...(filters.isActive === undefined ? {} : { isActive: filters.isActive }),
-        ...(filters.grade ? { subject: { grade: filters.grade } } : {}),
+        ...(filters.gradeId ? { subject: { gradeId: filters.gradeId } } : {}),
       },
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
       select: driveLinkSelect,

@@ -1,30 +1,37 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { Grade, GradeId } from "@/types/grade";
+import { useEffect, useRef, useState } from "react";
+import type { PublicGrade } from "@/types/grade";
 import { publicContentService } from "../services/public-content-service";
 import type { PublicSubject } from "@/types/public-content";
 import { GradeSelector } from "./grade-selector";
 import { SubjectCard } from "./subject-card";
 
-type SubjectsSectionProps = {
-  grades: readonly Grade[];
-};
-
-export function SubjectsSection({ grades }: SubjectsSectionProps) {
-  const [selectedGradeId, setSelectedGradeId] = useState<GradeId | null>(null);
+export function SubjectsSection() {
+  const [grades, setGrades] = useState<PublicGrade[]>([]);
+  const [gradesLoading, setGradesLoading] = useState(true);
+  const [gradesError, setGradesError] = useState(false);
+  const [selectedGradeId, setSelectedGradeId] = useState<number | null>(null);
   const [subjects, setSubjects] = useState<PublicSubject[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestId = useRef(0);
-  const cache = useRef(new Map<GradeId, PublicSubject[]>());
+  const cache = useRef(new Map<string, PublicSubject[]>());
   const selectedGrade = grades.find((grade) => grade.id === selectedGradeId);
 
-  async function selectGrade(gradeId: GradeId) {
+  useEffect(() => {
+    let active = true;
+    publicContentService.getPublicGrades().then((items) => { if (active) { setGrades(items); setGradesError(false); setGradesLoading(false); } }).catch(() => { if (active) { setGradesError(true); setGradesLoading(false); } });
+    return () => { active = false; };
+  }, []);
+
+  async function selectGrade(gradeId: number) {
+    const grade = grades.find((item) => item.id === gradeId);
+    if (!grade) return;
     setSelectedGradeId(gradeId);
     setLoading(true);
     setError(null);
-    const cached = cache.current.get(gradeId);
+    const cached = cache.current.get(grade.slug);
     if (cached) {
       setSubjects(cached);
       setLoading(false);
@@ -33,8 +40,8 @@ export function SubjectsSection({ grades }: SubjectsSectionProps) {
     setSubjects([]);
     const currentRequest = ++requestId.current;
     try {
-      const items = await publicContentService.getPublicSubjects(gradeId);
-      cache.current.set(gradeId, items);
+      const items = await publicContentService.getPublicSubjects(grade.slug);
+      cache.current.set(grade.slug, items);
       if (currentRequest === requestId.current) setSubjects(items);
     } catch {
       if (currentRequest === requestId.current) setError("تعذر تحميل المواد حاليًا. حاول مجددًا.");
@@ -54,16 +61,12 @@ export function SubjectsSection({ grades }: SubjectsSectionProps) {
           اختر صفك أولاً لتظهر المواد التعليمية المتاحة له.
         </p>
 
-        <GradeSelector
-          grades={grades}
-          selectedGradeId={selectedGradeId}
-          onSelect={(gradeId) => void selectGrade(gradeId)}
-        />
+        {gradesLoading ? <p className="mt-8 font-bold text-slate-600">جارٍ تحميل الصفوف...</p> : gradesError ? <p role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 font-bold text-red-800">تعذر تحميل الصفوف حاليًا. حاول مجددًا.</p> : grades.length ? <GradeSelector grades={grades} selectedGradeId={selectedGradeId} onSelect={(gradeId) => void selectGrade(gradeId)} /> : <p className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center font-bold text-slate-600">لا توجد صفوف متاحة حاليًا.</p>}
 
         {selectedGrade ? (
           <div key={selectedGrade.id} className="grade-content-enter mt-10" aria-live="polite">
             <h3 className="text-2xl font-black text-[var(--sanabil-navy)]">
-              مواد {selectedGrade.label}
+              مواد {selectedGrade.name}
             </h3>
             {loading ? (
               <p className="mt-6 rounded-[1.75rem] border border-slate-200 bg-white px-6 py-12 text-center font-bold text-slate-600">جارٍ تحميل المواد...</p>

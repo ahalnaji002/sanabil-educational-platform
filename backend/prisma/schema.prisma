@@ -12,12 +12,6 @@ enum AdminRole {
   ADMIN
 }
 
-enum Grade {
-  TENTH
-  ELEVENTH
-  TAWJIHI
-}
-
 model Admin {
   id           Int       @id @default(autoincrement())
   name         String    @db.VarChar(120)
@@ -32,18 +26,33 @@ model Admin {
   @@map("admins")
 }
 
+model Grade {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(120)
+  slug      String    @unique @db.VarChar(160)
+  sortOrder Int       @default(0) @map("sort_order")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  subjects  Subject[]
+
+  @@index([isActive, sortOrder])
+  @@map("grades")
+}
+
 model Subject {
   id         Int         @id @default(autoincrement())
   name       String      @db.VarChar(120)
   slug       String      @unique @db.VarChar(160)
-  grade      Grade
+  gradeId    Int         @map("grade_id")
+  grade      Grade       @relation(fields: [gradeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   isActive   Boolean     @default(true) @map("is_active")
   createdAt  DateTime    @default(now()) @map("created_at")
   updatedAt  DateTime    @updatedAt @map("updated_at")
   driveLinks DriveLink[]
 
   @@index([isActive])
-  @@index([grade, isActive])
+  @@index([gradeId, isActive])
   @@map("subjects")
 }
 

@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-export const gradeSchema = z.enum(["TENTH", "ELEVENTH", "TAWJIHI"]);
 export const subjectStatusSchema = z.enum(["active", "inactive", "all"]);
 
 const nameSchema = z.string().trim().min(1, "Name is required").max(120, "Name is too long");
@@ -17,24 +16,24 @@ export const subjectIdParamsSchema = z.object({
 
 export const subjectListQuerySchema = z.object({
   status: subjectStatusSchema.default("all"),
-  grade: gradeSchema.optional(),
+  gradeId: z.coerce.number().int().positive().optional(),
 }).strict();
 
 export const publicSubjectListQuerySchema = z.object({
-  grade: gradeSchema.optional(),
+  grade: z.string().trim().toLowerCase().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(),
 }).strict();
 
 export const createSubjectBodySchema = z.object({
   name: nameSchema,
   slug: slugSchema,
-  grade: gradeSchema,
+  gradeId: z.number().int().positive(),
   isActive: z.boolean().default(true),
 }).strict();
 
 export const updateSubjectBodySchema = z.object({
   name: nameSchema,
   slug: slugSchema,
-  grade: gradeSchema,
+  gradeId: z.number().int().positive(),
   isActive: z.boolean(),
 }).strict();
 

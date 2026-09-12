@@ -20,7 +20,7 @@ export class DriveLinkService {
   list(filters: DriveLinkListQuery): Promise<DriveLinkRecord[]> {
     return this.repository.findMany({
       ...(filters.subjectId ? { subjectId: filters.subjectId } : {}),
-      ...(filters.grade ? { grade: filters.grade } : {}),
+      ...(filters.gradeId ? { gradeId: filters.gradeId } : {}),
       ...(filters.status === "all" ? {} : { isActive: filters.status === "active" }),
     });
   }
@@ -94,10 +94,10 @@ export class DriveLinkService {
     await this.repository.reorder(input.subjectId, input.items);
   }
 
-  async listPublic(slug: string): Promise<{ subject: { id: number; name: string; slug: string; grade: DriveLinkRecord["subject"]["grade"] }; driveLinks: PublicDriveLink[] }> {
+  async listPublic(slug: string): Promise<{ subject: { id: number; name: string; slug: string; grade: { id: number; name: string; slug: string } }; driveLinks: PublicDriveLink[] }> {
     const subject = await this.subjectRepository.findBySlug(slug);
-    if (!subject || !subject.isActive) throw new ApiError(404, "Subject not found");
+    if (!subject || !subject.isActive || !subject.grade.isActive) throw new ApiError(404, "Subject not found");
     const driveLinks = await this.repository.findPublicBySubjectId(subject.id);
-    return { subject: { id: subject.id, name: subject.name, slug: subject.slug, grade: subject.grade }, driveLinks };
+    return { subject: { id: subject.id, name: subject.name, slug: subject.slug, grade: { id: subject.grade.id, name: subject.grade.name, slug: subject.grade.slug } }, driveLinks };
   }
 }

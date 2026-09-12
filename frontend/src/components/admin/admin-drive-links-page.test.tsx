@@ -3,8 +3,12 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ replace: vi.fn(), getSubjects: vi.fn(), getDriveLinks: vi.fn(), create: vi.fn(), update: vi.fn(), status: vi.fn(), remove: vi.fn(), reorder: vi.fn() }));
+const mocks = vi.hoisted(() => ({ replace: vi.fn(), getGrades: vi.fn(), getSubjects: vi.fn(), getDriveLinks: vi.fn(), create: vi.fn(), update: vi.fn(), status: vi.fn(), remove: vi.fn(), reorder: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: mocks.replace }), useSearchParams: () => new URLSearchParams("subjectId=1") }));
+vi.mock("../../services/admin-grade-service", () => {
+  class AdminGradeError extends Error { constructor(public readonly kind: string) { super(kind); } }
+  return { AdminGradeError, adminGradeService: { getGrades: mocks.getGrades } };
+});
 vi.mock("../../services/admin-subject-service", () => {
   class AdminSubjectError extends Error { constructor(public readonly kind: string) { super(kind); } }
   return { AdminSubjectError, adminSubjectService: { getSubjects: mocks.getSubjects } };
@@ -17,12 +21,18 @@ vi.mock("../../services/admin-drive-link-service", () => {
 import { AdminDriveLinkError } from "../../services/admin-drive-link-service";
 import { AdminDriveLinksPage } from "./admin-drive-links-page";
 
-const subject = { id: 1, name: "الرياضيات", slug: "mathematics", grade: "TAWJIHI" as const, isActive: true, createdAt: "2026", updatedAt: "2026" };
-const tenthSubject = { ...subject, id: 2, name: "علوم عاشر", slug: "tenth-science", grade: "TENTH" as const };
-const eleventhSubject = { ...subject, id: 3, name: "فيزياء حادي عشر", slug: "eleventh-physics", grade: "ELEVENTH" as const };
+const grades = [
+  { id: 1, name: "عاشر", slug: "tenth", sortOrder: 1, isActive: true, createdAt: "2026", updatedAt: "2026", subjectCount: 1 },
+  { id: 2, name: "حادي عشر", slug: "eleventh", sortOrder: 2, isActive: true, createdAt: "2026", updatedAt: "2026", subjectCount: 1 },
+  { id: 3, name: "توجيهي", slug: "tawjihi", sortOrder: 3, isActive: true, createdAt: "2026", updatedAt: "2026", subjectCount: 1 },
+];
+const subject = { id: 1, name: "الرياضيات", slug: "mathematics", gradeId: 3, grade: grades[2]!, isActive: true, createdAt: "2026", updatedAt: "2026" };
+const tenthSubject = { ...subject, id: 2, name: "علوم عاشر", slug: "tenth-science", gradeId: 1, grade: grades[0]! };
+const eleventhSubject = { ...subject, id: 3, name: "فيزياء حادي عشر", slug: "eleventh-physics", gradeId: 2, grade: grades[1]! };
 const driveLink = { id: 1, title: "الفرع العلمي", description: "شرح", subjectId: 1, driveUrl: "https://drive.google.com/one", sortOrder: 1, isActive: true, createdAt: "2026", updatedAt: "2026", subject };
 const second = { ...driveLink, id: 2, title: "الفرع الأدبي", driveUrl: "https://drive.google.com/two", sortOrder: 2 };
 beforeEach(() => {
+  mocks.getGrades.mockResolvedValue(grades);
   mocks.getSubjects.mockResolvedValue([subject, tenthSubject, eleventhSubject]); mocks.getDriveLinks.mockResolvedValue([driveLink, second]);
   mocks.create.mockResolvedValue(driveLink); mocks.update.mockResolvedValue(driveLink); mocks.status.mockResolvedValue(driveLink);
   mocks.remove.mockResolvedValue({ id: 1 }); mocks.reorder.mockResolvedValue(null);
@@ -36,13 +46,13 @@ describe("AdminDriveLinksPage", () => {
     expect((screen.getByLabelText("المادة") as HTMLSelectElement).value).toBe("1");
     expect(mocks.getDriveLinks).toHaveBeenCalledWith({ status: "all", subjectId: 1 });
     await user.selectOptions(screen.getByLabelText("الحالة"), "inactive");
-    await user.selectOptions(screen.getByLabelText("الصف"), "ELEVENTH");
-    await waitFor(() => expect(mocks.getDriveLinks).toHaveBeenLastCalledWith({ status: "inactive", grade: "ELEVENTH" }));
+    await user.selectOptions(screen.getByLabelText("الصف"), "2");
+    await waitFor(() => expect(mocks.getDriveLinks).toHaveBeenLastCalledWith({ status: "inactive", gradeId: 2 }));
   });
   it.each([
-    ["TAWJIHI", "الرياضيات", ["علوم عاشر", "فيزياء حادي عشر"]],
-    ["TENTH", "علوم عاشر", ["الرياضيات", "فيزياء حادي عشر"]],
-    ["ELEVENTH", "فيزياء حادي عشر", ["الرياضيات", "علوم عاشر"]],
+    ["3", "الرياضيات", ["علوم عاشر", "فيزياء حادي عشر"]],
+    ["1", "علوم عاشر", ["الرياضيات", "فيزياء حادي عشر"]],
+    ["2", "فيزياء حادي عشر", ["الرياضيات", "علوم عاشر"]],
   ] as const)("filters Subject options for %s", async (selectedGrade, expected, excluded) => {
     const user = userEvent.setup(); render(<AdminDriveLinksPage />); await screen.findAllByText("الفرع العلمي");
     await user.selectOptions(screen.getByLabelText("الصف"), selectedGrade);
@@ -59,9 +69,9 @@ describe("AdminDriveLinksPage", () => {
   it("resets a selected Subject when the new grade does not contain it", async () => {
     const user = userEvent.setup(); render(<AdminDriveLinksPage />); await screen.findAllByText("الفرع العلمي");
     expect((screen.getByLabelText("المادة") as HTMLSelectElement).value).toBe("1");
-    await user.selectOptions(screen.getByLabelText("الصف"), "TENTH");
+    await user.selectOptions(screen.getByLabelText("الصف"), "1");
     expect((screen.getByLabelText("المادة") as HTMLSelectElement).value).toBe("");
-    await waitFor(() => expect(mocks.getDriveLinks).toHaveBeenLastCalledWith({ status: "all", grade: "TENTH" }));
+    await waitFor(() => expect(mocks.getDriveLinks).toHaveBeenLastCalledWith({ status: "all", gradeId: 1 }));
   });
   it("validates and creates a link", async () => {
     const user = userEvent.setup(); render(<AdminDriveLinksPage />); await screen.findAllByText("الفرع العلمي");

@@ -1,11 +1,12 @@
-export type Grade = "TENTH" | "ELEVENTH" | "TAWJIHI";
+import type { GradeReference } from "./grade";
 export type SubjectStatus = "active" | "inactive" | "all";
 
 export type AdminSubject = {
   id: number;
   name: string;
   slug: string;
-  grade: Grade;
+  gradeId: number;
+  grade: GradeReference;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -14,7 +15,7 @@ export type AdminSubject = {
 export type CreateSubjectInput = {
   name: string;
   slug: string;
-  grade: Grade;
+  gradeId: number;
   isActive: boolean;
 };
 
@@ -22,5 +23,5 @@ export type UpdateSubjectInput = CreateSubjectInput;
 
 export type SubjectFilters = {
   status: SubjectStatus;
-  grade?: Grade;
+  gradeId?: number;
 };

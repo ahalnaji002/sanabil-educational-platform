@@ -25,7 +25,7 @@ export function PublicSubjectPage({ slug }: { slug: string }) {
         setError(null);
         setLoading(false);
         try {
-          const gradeSubjects = await publicContentService.getPublicSubjects(result.subject.grade);
+          const gradeSubjects = await publicContentService.getPublicSubjects(result.subject.grade.slug);
           if (active) setSubjects(gradeSubjects);
         } catch {
           // Quick navigation is optional; available Drive Links remain usable.

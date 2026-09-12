@@ -5,8 +5,8 @@ import { SubjectQuickNavigation } from "./subject-quick-navigation";
 import type { PublicSubject } from "@/types/public-content";
 
 const subjects: readonly PublicSubject[] = [
-  { id: 1, grade: "TAWJIHI", name: "الرياضيات", slug: "mathematics" },
-  { id: 2, grade: "TAWJIHI", name: "الفيزياء", slug: "physics" },
+  { id: 1, grade: { id: 3, name: "توجيهي", slug: "tawjihi" }, name: "الرياضيات", slug: "mathematics" },
+  { id: 2, grade: { id: 3, name: "توجيهي", slug: "tawjihi" }, name: "الفيزياء", slug: "physics" },
 ];
 
 describe("SubjectQuickNavigation", () => {

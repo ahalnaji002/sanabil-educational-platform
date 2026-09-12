@@ -20,7 +20,7 @@ async function driveLinkRequest<T>(request: () => Promise<{ data: ApiSuccess<T> 
   try { assertApiConfigured(); return (await request()).data.data; } catch (error) { throw normalizeError(error); }
 }
 export const adminDriveLinkService = {
-  getDriveLinks: (filters: DriveLinkFilters) => driveLinkRequest<{ driveLinks: AdminDriveLink[] }>(() => apiClient.get("/api/admin/drive-links", { params: { status: filters.status, ...(filters.subjectId ? { subjectId: filters.subjectId } : {}), ...(filters.grade ? { grade: filters.grade } : {}) } })).then(({ driveLinks }) => driveLinks),
+  getDriveLinks: (filters: DriveLinkFilters) => driveLinkRequest<{ driveLinks: AdminDriveLink[] }>(() => apiClient.get("/api/admin/drive-links", { params: { status: filters.status, ...(filters.subjectId ? { subjectId: filters.subjectId } : {}), ...(filters.gradeId ? { gradeId: filters.gradeId } : {}) } })).then(({ driveLinks }) => driveLinks),
   getDriveLink: (id: number) => driveLinkRequest<{ driveLink: AdminDriveLink }>(() => apiClient.get(`/api/admin/drive-links/${String(id)}`)).then(({ driveLink }) => driveLink),
   createDriveLink: (input: CreateDriveLinkInput) => driveLinkRequest<{ driveLink: AdminDriveLink }>(() => apiClient.post("/api/admin/drive-links", input)).then(({ driveLink }) => driveLink),
   updateDriveLink: (id: number, input: UpdateDriveLinkInput) => driveLinkRequest<{ driveLink: AdminDriveLink }>(() => apiClient.put(`/api/admin/drive-links/${String(id)}`, input)).then(({ driveLink }) => driveLink),

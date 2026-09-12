@@ -59,7 +59,7 @@ async function subjectRequest<T>(request: () => Promise<{ data: ApiSuccess<T> }>
 export const adminSubjectService = {
   getSubjects: (filters: SubjectFilters) => subjectRequest<{ subjects: AdminSubject[] }>(() =>
     apiClient.get("/api/admin/subjects", {
-      params: { status: filters.status, ...(filters.grade ? { grade: filters.grade } : {}) },
+      params: { status: filters.status, ...(filters.gradeId ? { gradeId: filters.gradeId } : {}) },
     }),
   ).then(({ subjects }) => subjects),
 

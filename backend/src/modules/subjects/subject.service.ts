@@ -8,11 +8,12 @@ import type {
 } from "./subject.schema.js";
 import type { SubjectRepository } from "./subject.repository.js";
 import type { PublicSubject, SubjectRecord, SubjectWriteInput } from "./subject.types.js";
+import type { GradeRepository } from "../grades/grade.repository.js";
 
 const normalizeInput = (input: CreateSubjectBody | UpdateSubjectBody): SubjectWriteInput => ({
   name: input.name.trim(),
   slug: input.slug.trim().toLowerCase(),
-  grade: input.grade,
+  gradeId: input.gradeId,
   isActive: input.isActive,
 });
 
@@ -21,11 +22,11 @@ function isUniqueConstraintError(error: unknown) {
 }
 
 export class SubjectService {
-  constructor(private readonly repository: SubjectRepository) {}
+  constructor(private readonly repository: SubjectRepository, private readonly gradeRepository: GradeRepository) {}
 
   list(filters: SubjectListQuery): Promise<SubjectRecord[]> {
     return this.repository.findMany({
-      ...(filters.grade ? { grade: filters.grade } : {}),
+      ...(filters.gradeId ? { gradeId: filters.gradeId } : {}),
       ...(filters.status === "all" ? {} : { isActive: filters.status === "active" }),
     });
   }
@@ -38,6 +39,7 @@ export class SubjectService {
 
   async create(input: CreateSubjectBody): Promise<SubjectRecord> {
     const data = normalizeInput(input);
+    if (!await this.gradeRepository.findById(data.gradeId)) throw new ApiError(400, "Grade does not exist", { gradeId: "Grade does not exist" });
     if (await this.repository.findBySlug(data.slug)) {
       throw new ApiError(409, "Subject slug already exists", { slug: "Slug is already in use" });
     }
@@ -55,6 +57,7 @@ export class SubjectService {
   async update(id: number, input: UpdateSubjectBody): Promise<SubjectRecord> {
     await this.getById(id);
     const data = normalizeInput(input);
+    if (!await this.gradeRepository.findById(data.gradeId)) throw new ApiError(400, "Grade does not exist", { gradeId: "Grade does not exist" });
     const duplicate = await this.repository.findBySlug(data.slug);
     if (duplicate && duplicate.id !== id) {
       throw new ApiError(409, "Subject slug already exists", { slug: "Slug is already in use" });
@@ -76,10 +79,12 @@ export class SubjectService {
   }
 
   async listPublic(filters: PublicSubjectListQuery): Promise<PublicSubject[]> {
+    const grade = filters.grade ? await this.gradeRepository.findBySlug(filters.grade) : null;
+    if (filters.grade && (!grade || !grade.isActive)) throw new ApiError(404, "Grade not found");
     const subjects = await this.repository.findMany({
       isActive: true,
-      ...(filters.grade ? { grade: filters.grade } : {}),
+      ...(grade ? { gradeId: grade.id } : {}),
     });
-    return subjects.map(({ id, name, slug, grade }) => ({ id, name, slug, grade }));
+    return subjects.filter((subject) => subject.grade.isActive).map(({ id, name, slug, grade: subjectGrade }) => ({ id, name, slug, grade: { id: subjectGrade.id, name: subjectGrade.name, slug: subjectGrade.slug } }));
   }
 }

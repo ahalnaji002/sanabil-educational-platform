@@ -1,12 +1,11 @@
-import type { Grade } from "@prisma/client";
-
 export type DriveLinkStatus = "active" | "inactive" | "all";
 
 export type DriveLinkSubject = {
   id: number;
   name: string;
   slug: string;
-  grade: Grade;
+  gradeId: number;
+  grade: { id: number; name: string; slug: string; isActive: boolean };
   isActive: boolean;
 };
 

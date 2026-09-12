@@ -11,7 +11,7 @@ The repository is split into independently deployable applications:
 
 ## Features
 
-- Student-facing Arabic RTL homepage with a responsive grade-first subject flow.
+- Student-facing Arabic RTL homepage with a responsive, API-driven grade-first subject flow.
 - Database-driven subject destination pages at `/subjects/[slug]`.
 - Compact subject-to-subject quick navigation on every subject destination page.
 - Student subject discovery and Drive destinations use unauthenticated public content APIs.
@@ -22,10 +22,11 @@ The repository is split into independently deployable applications:
 - Arabic RTL frontend foundation with Sanabil navy and gold branding.
 - Express REST API foundation, health endpoint, and HttpOnly cookie-based admin authentication.
 - Arabic admin login and protected responsive dashboard shell at `/admin/login` and `/admin/dashboard`.
-- Protected Arabic subject management at `/admin/dashboard/subjects` with server-side grade/status filters, create, edit, activate, and soft-deactivate actions.
+- Protected Arabic grade management at `/admin/dashboard/grades` with add, edit, activate/deactivate, subject counts, and persisted ordering.
+- Protected Arabic subject management at `/admin/dashboard/subjects` with dynamic Grade/status filters, create, edit, activate, and soft-deactivate actions.
 - Protected Arabic Drive Link management at `/admin/dashboard/drive-links` with combined filters, create/edit, explicit activation, permanent deletion, and per-Subject reordering.
-- Fixed database grade enum (`TENTH`, `ELEVENTH`, `TAWJIHI`) and protected admin/public subject APIs.
-- Initial Prisma entities: `Admin`, `Subject`, and `DriveLink` only.
+- Dynamic database-backed Grades and protected admin/public Grade and Subject APIs.
+- Prisma entities: `Admin`, `Grade`, `Subject`, and `DriveLink`.
 - A subject owns zero or more ordered Drive destination links.
 - Environment templates keep credentials and secrets out of source control.
 
@@ -54,14 +55,14 @@ Generate the Prisma client:
 npm run prisma:generate --workspace backend
 ```
 
-Apply the committed migration and seed the idempotent super-admin:
+Apply the committed migrations, then run the idempotent bootstrap seed when initializing or reconciling an environment:
 
 ```bash
 npm run prisma:migrate --workspace backend
 npm run prisma:seed --workspace backend
 ```
 
-The seed reads credentials from the environment, hashes the password, and upserts by normalized email. It upserts the existing Subjects and idempotently preserves the eight real Google Drive destinations that previously lived in frontend data; it creates no fake Drive URLs and does not overwrite existing matching links.
+The seed reads credentials from the environment, hashes the password, and upserts by normalized email. It upserts Grades by slug, resolves each Subject's `gradeId`, and idempotently preserves the real Google Drive destinations; it creates no fake Drive URLs and does not overwrite existing matching links.
 
 Start the applications in separate terminals:
 
@@ -70,13 +71,13 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
-Open http://localhost:3000 after starting both applications. Students select عاشر, حادي عشر, or توجيهي; the browser then requests active Subjects for that grade from `/api/public/subjects`. Opening a Subject requests its active links from `/api/public/subjects/:slug/drive-links`. Empty grades and Subjects show friendly Arabic states, while inactive content remains hidden.
+Open http://localhost:3000 after starting both applications. The browser loads active Grades from `/api/public/grades` in administrator-defined order, then requests active Subjects using the selected Grade slug through `/api/public/subjects?grade=<slug>`. Opening a Subject requests its active links from `/api/public/subjects/:slug/drive-links`. Empty grades and Subjects show friendly Arabic states; deactivating a Grade hides both its Subjects and Drive Links from students without deleting data.
 
 Announcement content is maintained in frontend/src/data/announcements.ts and is accessed only through announcementService. Active/date filtering and ordering are handled by the service so it can later be replaced with an API implementation.
 
-Admin users sign in at `/admin/login`. The frontend validates the existing HttpOnly-cookie session through the configured API and protects `/admin/dashboard` before rendering management content. Subjects and Drive Links are enabled; grades and announcements remain marked as upcoming.
+Admin users sign in at `/admin/login`. The frontend validates the existing HttpOnly-cookie session through the configured API and protects `/admin/dashboard` before rendering management content. Grades, Subjects, and Drive Links are enabled; only Announcements remain marked as upcoming.
 
-Subject management is available at `/admin/dashboard/subjects`. Its `إدارة الروابط` action opens the selected Subject in `/admin/dashboard/drive-links?subjectId=<id>`. Subject `DELETE` performs reversible deactivation; Drive Link status changes use the dedicated status endpoint, while Drive Link `DELETE` is intentionally permanent. New links must use HTTPS and the exact `drive.google.com` hostname. Ordering is scoped to each Subject and persisted immediately.
+Grade management is available at `/admin/dashboard/grades`; `عرض المواد` opens `/admin/dashboard/subjects?gradeId=<id>`. Grades are never hard-deleted through the admin API. Subject management remains at `/admin/dashboard/subjects`, and its `إدارة الروابط` action opens the selected Subject in `/admin/dashboard/drive-links?subjectId=<id>`. Subject `DELETE` performs reversible deactivation; Drive Link status changes use the dedicated status endpoint, while Drive Link `DELETE` is intentionally permanent. New links must use HTTPS and the exact `drive.google.com` hostname. Ordering is scoped to each Subject and persisted immediately.
 
 The current discount announcement uses the supplied local image at frontend/public/announcements/sanabil-50-off-v2.png. Its details dialog presents the image as a softened background with a dark lower gradient behind the announcement text.
 

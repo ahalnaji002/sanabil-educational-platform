@@ -1,14 +1,14 @@
-import type { Grade, GradeId } from "@/types/grade";
+import type { PublicGrade } from "@/types/grade";
 
 type GradeSelectorProps = {
-  grades: readonly Grade[];
-  selectedGradeId: GradeId | null;
-  onSelect: (gradeId: GradeId) => void;
+  grades: readonly PublicGrade[];
+  selectedGradeId: number | null;
+  onSelect: (gradeId: number) => void;
 };
 
 export function GradeSelector({ grades, selectedGradeId, onSelect }: GradeSelectorProps) {
   return (
-    <div className="mt-8 grid grid-cols-3 gap-2 sm:max-w-2xl sm:gap-4" aria-label="الصف الدراسي">
+    <div className="mt-8 grid grid-cols-2 gap-2 sm:max-w-2xl sm:grid-cols-3 sm:gap-4" aria-label="الصف الدراسي">
       {grades.map((grade) => {
         const isSelected = grade.id === selectedGradeId;
 
@@ -24,7 +24,7 @@ export function GradeSelector({ grades, selectedGradeId, onSelect }: GradeSelect
                 : "border-slate-200 bg-white text-[var(--sanabil-navy)] hover:border-[var(--sanabil-gold)] hover:bg-[var(--sanabil-gold-soft)]"
             }`}
           >
-            {grade.label}
+            {grade.name}
           </button>
         );
       })}

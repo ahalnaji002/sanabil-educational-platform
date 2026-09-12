@@ -2,12 +2,13 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { gradeOptions } from "../../lib/admin-grade";
 import { AdminSubjectError } from "../../services/admin-subject-service";
-import type { AdminSubject, CreateSubjectInput, Grade } from "../../types/admin-subject";
+import type { AdminSubject, CreateSubjectInput } from "../../types/admin-subject";
+import type { AdminGrade } from "../../types/grade";
 
 type SubjectFormModalProps = {
   subject: AdminSubject | null;
+  grades: AdminGrade[];
   onClose: () => void;
   onSave: (input: CreateSubjectInput) => Promise<void>;
   onUnauthorized: () => void;
@@ -15,10 +16,10 @@ type SubjectFormModalProps = {
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export function SubjectFormModal({ subject, onClose, onSave, onUnauthorized }: SubjectFormModalProps) {
+export function SubjectFormModal({ subject, grades, onClose, onSave, onUnauthorized }: SubjectFormModalProps) {
   const [name, setName] = useState(subject?.name ?? "");
   const [slug, setSlug] = useState(subject?.slug ?? "");
-  const [grade, setGrade] = useState<Grade>(subject?.grade ?? "TAWJIHI");
+  const [gradeId, setGradeId] = useState(subject?.gradeId ?? grades[0]?.id ?? 0);
   const [isActive, setIsActive] = useState(subject?.isActive ?? true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -42,6 +43,7 @@ export function SubjectFormModal({ subject, onClose, onSave, onUnauthorized }: S
     else if (normalizedName.length > 120) nextErrors.name = "اسم المادة طويل جدًا.";
     if (!normalizedSlug) nextErrors.slug = "الرابط المختصر مطلوب.";
     else if (!slugPattern.test(normalizedSlug)) nextErrors.slug = "استخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات مفردة فقط.";
+    if (!gradeId) nextErrors.gradeId = "اختر الصف.";
 
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
@@ -51,7 +53,7 @@ export function SubjectFormModal({ subject, onClose, onSave, onUnauthorized }: S
     setSubmitting(true);
     setErrors({});
     try {
-      await onSave({ name: normalizedName, slug: normalizedSlug, grade, isActive });
+      await onSave({ name: normalizedName, slug: normalizedSlug, gradeId, isActive });
     } catch (error) {
       if (error instanceof AdminSubjectError) {
         if (error.kind === "unauthorized") {
@@ -99,9 +101,11 @@ export function SubjectFormModal({ subject, onClose, onSave, onUnauthorized }: S
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="subject-grade" className="mb-2 block text-sm font-bold text-[var(--sanabil-navy)]">الصف</label>
-              <select id="subject-grade" value={grade} onChange={(event) => setGrade(event.target.value as Grade)} disabled={submitting} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 outline-none focus:border-[var(--sanabil-gold)] focus:ring-4 focus:ring-[var(--sanabil-gold)]/20">
-                {gradeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              <select id="subject-grade" value={gradeId || ""} onChange={(event) => setGradeId(Number(event.target.value))} disabled={submitting} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 outline-none focus:border-[var(--sanabil-gold)] focus:ring-4 focus:ring-[var(--sanabil-gold)]/20">
+                <option value="">اختر الصف</option>
+                {grades.map((grade) => <option key={grade.id} value={grade.id}>{grade.name}{grade.isActive ? "" : " — غير نشط"}</option>)}
               </select>
+              {errors.gradeId ? <p className="mt-2 text-sm font-semibold text-red-700">{errors.gradeId}</p> : null}
             </div>
             <div>
               <label htmlFor="subject-status" className="mb-2 block text-sm font-bold text-[var(--sanabil-navy)]">الحالة</label>

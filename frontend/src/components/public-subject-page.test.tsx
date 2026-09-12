@@ -13,7 +13,7 @@ vi.mock("./site-footer", () => ({ SiteFooter: () => <footer /> }));
 import { PublicContentError } from "../services/public-content-service";
 import { PublicSubjectPage } from "./public-subject-page";
 
-const subject = { id: 1, name: "الرياضيات", slug: "mathematics", grade: "TAWJIHI" as const };
+const subject = { id: 1, name: "الرياضيات", slug: "mathematics", grade: { id: 3, name: "توجيهي", slug: "tawjihi" } };
 beforeEach(() => {
   Object.defineProperty(window, "scrollTo", { value: vi.fn(), writable: true });
   mocks.getPublicSubjects.mockResolvedValue([subject]);

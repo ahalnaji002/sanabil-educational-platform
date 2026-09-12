@@ -1,10 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getGradeLabel, gradeOptions } from "../../lib/admin-grade";
+import { adminGradeService, AdminGradeError } from "../../services/admin-grade-service";
 import { AdminSubjectError, adminSubjectService } from "../../services/admin-subject-service";
-import type { AdminSubject, CreateSubjectInput, Grade, SubjectStatus } from "../../types/admin-subject";
+import type { AdminSubject, CreateSubjectInput, SubjectStatus } from "../../types/admin-subject";
+import type { AdminGrade } from "../../types/grade";
 import { SubjectFormModal } from "./subject-form-modal";
 
 const statusOptions: { value: SubjectStatus; label: string }[] = [
@@ -44,9 +45,12 @@ function SubjectActions({ subject, busy, onEdit, onToggle, onManageLinks }: {
 
 export function AdminSubjectsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryGradeId = Number(searchParams.get("gradeId")) || undefined;
   const [subjects, setSubjects] = useState<AdminSubject[]>([]);
+  const [grades, setGrades] = useState<AdminGrade[]>([]);
   const [status, setStatus] = useState<SubjectStatus>("all");
-  const [grade, setGrade] = useState<Grade | "">("");
+  const [gradeId, setGradeId] = useState<number | undefined>(queryGradeId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -54,8 +58,15 @@ export function AdminSubjectsPage() {
   const [busySubjectId, setBusySubjectId] = useState<number | null>(null);
 
   useEffect(() => {
+    adminGradeService.getGrades("all").then(setGrades).catch((requestError: unknown) => {
+      if (requestError instanceof AdminGradeError && requestError.kind === "unauthorized") router.replace("/admin/login");
+      else setError("تعذر تحميل قائمة الصفوف.");
+    });
+  }, [router]);
+
+  useEffect(() => {
     let active = true;
-    adminSubjectService.getSubjects({ status, ...(grade ? { grade } : {}) })
+    adminSubjectService.getSubjects({ status, ...(gradeId ? { gradeId } : {}) })
       .then((items) => {
         if (!active) return;
         setSubjects(items);
@@ -72,10 +83,10 @@ export function AdminSubjectsPage() {
         setLoading(false);
       });
     return () => { active = false; };
-  }, [grade, router, status]);
+  }, [gradeId, router, status]);
 
   async function refreshSubjects() {
-    const items = await adminSubjectService.getSubjects({ status, ...(grade ? { grade } : {}) });
+    const items = await adminSubjectService.getSubjects({ status, ...(gradeId ? { gradeId } : {}) });
     setSubjects(items);
     setError(null);
   }
@@ -102,7 +113,7 @@ export function AdminSubjectsPage() {
     setError(null);
     try {
       if (subject.isActive) await adminSubjectService.deactivateSubject(subject.id);
-      else await adminSubjectService.updateSubject(subject.id, { name: subject.name, slug: subject.slug, grade: subject.grade, isActive: true });
+      else await adminSubjectService.updateSubject(subject.id, { name: subject.name, slug: subject.slug, gradeId: subject.gradeId, isActive: true });
       await refreshSubjects();
     } catch (requestError) {
       if (!handleUnauthorized(requestError)) setError(listErrorMessage(requestError));
@@ -141,9 +152,9 @@ export function AdminSubjectsPage() {
         </div>
         <div>
           <label htmlFor="subjects-grade-filter" className="mb-2 block text-sm font-bold text-[var(--sanabil-navy)]">الصف</label>
-          <select id="subjects-grade-filter" value={grade} onChange={(event) => { setLoading(true); setGrade(event.target.value as Grade | ""); }} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 focus:border-[var(--sanabil-gold)] focus:outline-none focus:ring-4 focus:ring-[var(--sanabil-gold)]/20">
+          <select id="subjects-grade-filter" value={gradeId ?? ""} onChange={(event) => { setLoading(true); setGradeId(event.target.value ? Number(event.target.value) : undefined); }} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 focus:border-[var(--sanabil-gold)] focus:outline-none focus:ring-4 focus:ring-[var(--sanabil-gold)]/20">
             <option value="">الكل</option>
-            {gradeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            {grades.map((grade) => <option key={grade.id} value={grade.id}>{grade.name}</option>)}
           </select>
         </div>
       </section>
@@ -157,19 +168,19 @@ export function AdminSubjectsPage() {
               <table className="w-full border-collapse text-right">
                 <thead className="bg-slate-100 text-sm text-slate-700"><tr><th className="px-5 py-4">اسم المادة</th><th className="px-5 py-4">الصف</th><th className="px-5 py-4">slug</th><th className="px-5 py-4">الحالة</th><th className="px-5 py-4">الإجراءات</th></tr></thead>
                 <tbody className="divide-y divide-slate-200">
-                  {subjects.map((subject) => <tr key={subject.id}><td className="px-5 py-4 font-bold text-[var(--sanabil-navy)]">{subject.name}</td><td className="px-5 py-4 text-sm text-slate-700">{getGradeLabel(subject.grade)}</td><td className="px-5 py-4"><code dir="ltr" className="text-xs text-slate-600">{subject.slug}</code></td><td className="px-5 py-4"><StatusBadge active={subject.isActive} /></td><td className="px-5 py-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} /></td></tr>)}
+                  {subjects.map((subject) => <tr key={subject.id}><td className="px-5 py-4 font-bold text-[var(--sanabil-navy)]">{subject.name}</td><td className="px-5 py-4 text-sm text-slate-700">{subject.grade.name}</td><td className="px-5 py-4"><code dir="ltr" className="text-xs text-slate-600">{subject.slug}</code></td><td className="px-5 py-4"><StatusBadge active={subject.isActive} /></td><td className="px-5 py-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} /></td></tr>)}
                 </tbody>
               </table>
             </div>
 
             <div className="grid gap-4 md:hidden">
-              {subjects.map((subject) => <article key={subject.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)]"><div className="flex items-start justify-between gap-3"><div><h2 className="font-extrabold text-[var(--sanabil-navy)]">{subject.name}</h2><p className="mt-1 text-sm text-slate-600">{getGradeLabel(subject.grade)}</p></div><StatusBadge active={subject.isActive} /></div><code dir="ltr" className="mt-4 block break-all rounded-lg bg-slate-100 px-3 py-2 text-left text-xs text-slate-600">{subject.slug}</code><div className="mt-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} /></div></article>)}
+              {subjects.map((subject) => <article key={subject.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)]"><div className="flex items-start justify-between gap-3"><div><h2 className="font-extrabold text-[var(--sanabil-navy)]">{subject.name}</h2><p className="mt-1 text-sm text-slate-600">{subject.grade.name}</p></div><StatusBadge active={subject.isActive} /></div><code dir="ltr" className="mt-4 block break-all rounded-lg bg-slate-100 px-3 py-2 text-left text-xs text-slate-600">{subject.slug}</code><div className="mt-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} /></div></article>)}
             </div>
           </>
         )}
       </section>
 
-      {formOpen ? <SubjectFormModal key={editingSubject?.id ?? "new"} subject={editingSubject} onClose={() => { setFormOpen(false); setEditingSubject(null); }} onSave={handleSave} onUnauthorized={() => router.replace("/admin/login")} /> : null}
+      {formOpen ? <SubjectFormModal key={editingSubject?.id ?? "new"} subject={editingSubject} grades={grades} onClose={() => { setFormOpen(false); setEditingSubject(null); }} onSave={handleSave} onUnauthorized={() => router.replace("/admin/login")} /> : null}
     </div>
   );
 }
