@@ -34,5 +34,14 @@ describe("announcements section", () => {
     expect(document.activeElement).toBe(opener);
   });
   it("hides the section when the API result is empty", () => { const view = render(<AnnouncementsSection announcements={[]} />); expect(view.container.innerHTML).toBe(""); });
+  it("keeps announcement text outside an uploaded image", async () => {
+    const user = userEvent.setup();
+    render(<AnnouncementsSection announcements={[{ ...item, imageUrl: "https://cdn.example.com/promo.png" }]} />);
+    await user.click(screen.getByRole("button", { name: /عرض التفاصيل/ }));
+    const dialog = screen.getByRole("dialog");
+    const imageArea = within(dialog).getByRole("figure", { name: "صورة الإعلان" });
+    expect(within(imageArea).queryByText("إعلان تجريبي")).toBeNull();
+    expect(within(dialog).getByRole("heading", { name: "إعلان تجريبي" })).toBeTruthy();
+  });
   it("shows a retryable Arabic error when the API is unavailable", async () => { mocks.load.mockRejectedValue(new Error("offline")); render(<AnnouncementsSection />); await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("تعذر تحميل الإعلانات")); expect(screen.getByRole("button", { name: "إعادة المحاولة" })).toBeTruthy(); });
 });
