@@ -6,6 +6,7 @@ export type AdminSubject = {
   name: string;
   slug: string;
   gradeId: number;
+  sortOrder: number;
   grade: GradeReference;
   isActive: boolean;
   createdAt: string;
@@ -25,3 +26,5 @@ export type SubjectFilters = {
   status: SubjectStatus;
   gradeId?: number;
 };
+
+export type SubjectReorderInput = { gradeId: number; items: { id: number; sortOrder: number }[] };

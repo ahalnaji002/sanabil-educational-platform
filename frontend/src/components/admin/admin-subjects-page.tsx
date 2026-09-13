@@ -27,18 +27,23 @@ function StatusBadge({ active }: { active: boolean }) {
   return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-extrabold ${active ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>{active ? "نشط" : "غير نشط"}</span>;
 }
 
-function SubjectActions({ subject, busy, onEdit, onToggle, onManageLinks }: {
+function SubjectActions({ subject, busy, canReorder, first, last, onEdit, onToggle, onManageLinks, onMove }: {
   subject: AdminSubject;
   busy: boolean;
+  canReorder: boolean;
+  first: boolean;
+  last: boolean;
   onEdit: () => void;
   onToggle: () => void;
   onManageLinks: () => void;
+  onMove: (offset: -1 | 1) => void;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
       <button type="button" onClick={onEdit} disabled={busy} className="min-h-9 rounded-lg border border-slate-300 px-3 text-sm font-bold text-[var(--sanabil-navy)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)] disabled:opacity-50">تعديل</button>
       <button type="button" onClick={onManageLinks} disabled={busy} className="min-h-9 rounded-lg border border-[var(--sanabil-gold)] px-3 text-sm font-bold text-[var(--sanabil-navy)] disabled:opacity-50">إدارة الروابط</button>
       <button type="button" onClick={onToggle} disabled={busy} className={`min-h-9 rounded-lg px-3 text-sm font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)] disabled:opacity-50 ${subject.isActive ? "border border-red-200 bg-red-50 text-red-800" : "bg-emerald-700 text-white"}`}>{busy ? "جارٍ التنفيذ..." : subject.isActive ? "تعطيل" : "تفعيل"}</button>
+      {canReorder ? <><button type="button" aria-label={`تحريك ${subject.name} لأعلى`} title="تحريك لأعلى" onClick={() => onMove(-1)} disabled={busy || first} className="min-h-9 min-w-9 rounded-lg border border-slate-300 font-bold disabled:opacity-40">↑</button><button type="button" aria-label={`تحريك ${subject.name} لأسفل`} title="تحريك لأسفل" onClick={() => onMove(1)} disabled={busy || last} className="min-h-9 min-w-9 rounded-lg border border-slate-300 font-bold disabled:opacity-40">↓</button></> : null}
     </div>
   );
 }
@@ -56,6 +61,8 @@ export function AdminSubjectsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<AdminSubject | null>(null);
   const [busySubjectId, setBusySubjectId] = useState<number | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const canReorder = gradeId !== undefined && status === "all";
 
   useEffect(() => {
     adminGradeService.getGrades("all").then(setGrades).catch((requestError: unknown) => {
@@ -122,6 +129,28 @@ export function AdminSubjectsPage() {
     }
   }
 
+  async function moveSubject(index: number, offset: -1 | 1) {
+    if (!gradeId || !canReorder) return;
+    const target = index + offset;
+    if (target < 0 || target >= subjects.length) return;
+    const previous = subjects;
+    const next = [...subjects];
+    [next[index], next[target]] = [next[target]!, next[index]!];
+    const ordered = next.map((subject, itemIndex) => ({ ...subject, sortOrder: itemIndex + 1 }));
+    setSubjects(ordered);
+    setReordering(true);
+    setError(null);
+    try {
+      await adminSubjectService.reorderSubjects({ gradeId, items: ordered.map(({ id, sortOrder }) => ({ id, sortOrder })) });
+      await refreshSubjects();
+    } catch (requestError) {
+      setSubjects(previous);
+      if (!handleUnauthorized(requestError)) setError("تعذر حفظ ترتيب المواد. تمت استعادة الترتيب السابق.");
+    } finally {
+      setReordering(false);
+    }
+  }
+
   function openCreateForm() {
     setEditingSubject(null);
     setFormOpen(true);
@@ -138,7 +167,7 @@ export function AdminSubjectsPage() {
         <div>
           <p className="font-bold text-[var(--sanabil-gold-dark)]">إدارة المحتوى</p>
           <h1 className="mt-1 text-3xl font-black text-[var(--sanabil-navy)]">المواد</h1>
-          <p className="mt-2 text-sm leading-7 text-slate-600">أضف المواد وعدّل الصف والحالة والرابط المختصر لكل مادة.</p>
+          <p className="mt-2 text-sm leading-7 text-slate-600">أضف المواد وعدّل بياناتها ورتّب ظهورها داخل كل صف.</p>
         </div>
         <button type="button" onClick={openCreateForm} className="min-h-11 rounded-xl bg-[var(--sanabil-navy)] px-5 font-extrabold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sanabil-gold)]">إضافة مادة</button>
       </div>
@@ -159,6 +188,8 @@ export function AdminSubjectsPage() {
         </div>
       </section>
 
+      {!gradeId ? <p className="mt-3 text-sm font-semibold text-slate-600">اختر صفًا محددًا لإظهار أزرار ترتيب مواده.</p> : status !== "all" ? <p className="mt-3 text-sm font-semibold text-slate-600">اختر حالة «الكل» لتعديل ترتيب مواد هذا الصف.</p> : null}
+
       {error ? <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{error}</p> : null}
 
       <section aria-live="polite" aria-busy={loading} className="mt-6">
@@ -166,15 +197,15 @@ export function AdminSubjectsPage() {
           <>
             <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white md:block">
               <table className="w-full border-collapse text-right">
-                <thead className="bg-slate-100 text-sm text-slate-700"><tr><th className="px-5 py-4">اسم المادة</th><th className="px-5 py-4">الصف</th><th className="px-5 py-4">slug</th><th className="px-5 py-4">الحالة</th><th className="px-5 py-4">الإجراءات</th></tr></thead>
+                <thead className="bg-slate-100 text-sm text-slate-700"><tr><th className="px-5 py-4">الترتيب</th><th className="px-5 py-4">اسم المادة</th><th className="px-5 py-4">الصف</th><th className="px-5 py-4">slug</th><th className="px-5 py-4">الحالة</th><th className="px-5 py-4">الإجراءات</th></tr></thead>
                 <tbody className="divide-y divide-slate-200">
-                  {subjects.map((subject) => <tr key={subject.id}><td className="px-5 py-4 font-bold text-[var(--sanabil-navy)]">{subject.name}</td><td className="px-5 py-4 text-sm text-slate-700">{subject.grade.name}</td><td className="px-5 py-4"><code dir="ltr" className="text-xs text-slate-600">{subject.slug}</code></td><td className="px-5 py-4"><StatusBadge active={subject.isActive} /></td><td className="px-5 py-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} /></td></tr>)}
+                  {subjects.map((subject, index) => <tr key={subject.id}><td className="px-5 py-4 text-sm font-bold">{subject.sortOrder}</td><td className="px-5 py-4 font-bold text-[var(--sanabil-navy)]">{subject.name}</td><td className="px-5 py-4 text-sm text-slate-700">{subject.grade.name}</td><td className="px-5 py-4"><code dir="ltr" className="text-xs text-slate-600">{subject.slug}</code></td><td className="px-5 py-4"><StatusBadge active={subject.isActive} /></td><td className="px-5 py-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id || reordering} canReorder={canReorder} first={index === 0} last={index === subjects.length - 1} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} onMove={(offset) => void moveSubject(index, offset)} /></td></tr>)}
                 </tbody>
               </table>
             </div>
 
             <div className="grid gap-4 md:hidden">
-              {subjects.map((subject) => <article key={subject.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)]"><div className="flex items-start justify-between gap-3"><div><h2 className="font-extrabold text-[var(--sanabil-navy)]">{subject.name}</h2><p className="mt-1 text-sm text-slate-600">{subject.grade.name}</p></div><StatusBadge active={subject.isActive} /></div><code dir="ltr" className="mt-4 block break-all rounded-lg bg-slate-100 px-3 py-2 text-left text-xs text-slate-600">{subject.slug}</code><div className="mt-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} /></div></article>)}
+              {subjects.map((subject, index) => <article key={subject.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_30px_rgba(7,27,54,.05)]"><div className="flex items-start justify-between gap-3"><div><h2 className="font-extrabold text-[var(--sanabil-navy)]">{subject.name}</h2><p className="mt-1 text-sm text-slate-600">{subject.grade.name} · الترتيب: {subject.sortOrder}</p></div><StatusBadge active={subject.isActive} /></div><code dir="ltr" className="mt-4 block break-all rounded-lg bg-slate-100 px-3 py-2 text-left text-xs text-slate-600">{subject.slug}</code><div className="mt-4"><SubjectActions subject={subject} busy={busySubjectId === subject.id || reordering} canReorder={canReorder} first={index === 0} last={index === subjects.length - 1} onEdit={() => openEditForm(subject)} onToggle={() => void handleToggle(subject)} onManageLinks={() => router.push(`/admin/dashboard/drive-links?subjectId=${String(subject.id)}`)} onMove={(offset) => void moveSubject(index, offset)} /></div></article>)}
             </div>
           </>
         )}

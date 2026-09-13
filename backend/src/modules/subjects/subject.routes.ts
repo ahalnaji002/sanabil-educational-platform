@@ -9,6 +9,7 @@ import type { SubjectRepository } from "./subject.repository.js";
 import {
   createSubjectBodySchema,
   publicSubjectListQuerySchema,
+  reorderSubjectsBodySchema,
   subjectIdParamsSchema,
   subjectListQuerySchema,
   updateSubjectBodySchema,
@@ -29,6 +30,7 @@ export const adminSubjectRouter = (
   router.get("/", validateRequest({ query: subjectListQuerySchema }), asyncHandler(controller.listAdmin));
   router.get("/:id", validateRequest({ params: subjectIdParamsSchema }), asyncHandler(controller.getAdmin));
   router.post("/", validateRequest({ body: createSubjectBodySchema }), asyncHandler(controller.create));
+  router.patch("/reorder", validateRequest({ body: reorderSubjectsBodySchema }), asyncHandler(controller.reorder));
   router.put("/:id", validateRequest({ params: subjectIdParamsSchema, body: updateSubjectBodySchema }), asyncHandler(controller.update));
   router.delete("/:id", validateRequest({ params: subjectIdParamsSchema }), asyncHandler(controller.deactivate));
 

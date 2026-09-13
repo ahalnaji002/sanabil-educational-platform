@@ -5,11 +5,12 @@ const mocks = vi.hoisted(() => ({
   post: vi.fn(),
   put: vi.fn(),
   delete: vi.fn(),
+  patch: vi.fn(),
   assertApiConfigured: vi.fn(),
 }));
 
 vi.mock("../lib/api-client", () => ({
-  apiClient: { get: mocks.get, post: mocks.post, put: mocks.put, delete: mocks.delete },
+  apiClient: { get: mocks.get, post: mocks.post, put: mocks.put, delete: mocks.delete, patch: mocks.patch },
   assertApiConfigured: mocks.assertApiConfigured,
   ApiConfigurationError: class ApiConfigurationError extends Error {},
 }));
@@ -17,7 +18,7 @@ vi.mock("../lib/api-client", () => ({
 import { adminSubjectService } from "./admin-subject-service";
 
 const grade = { id: 3, name: "توجيهي", slug: "tawjihi", sortOrder: 3, isActive: true };
-const subject = { id: 1, name: "الرياضيات", slug: "mathematics", gradeId: 3, grade, isActive: true, createdAt: "2026-09-12", updatedAt: "2026-09-12" };
+const subject = { id: 1, name: "الرياضيات", slug: "mathematics", gradeId: 3, sortOrder: 1, grade, isActive: true, createdAt: "2026-09-12", updatedAt: "2026-09-12" };
 
 beforeEach(() => {
   Object.values(mocks).forEach((mock) => mock.mockReset());
@@ -44,5 +45,11 @@ describe("adminSubjectService", () => {
     expect(mocks.post).toHaveBeenCalledWith("/api/admin/subjects", input);
     expect(mocks.put).toHaveBeenCalledWith("/api/admin/subjects/1", input);
     expect(mocks.delete).toHaveBeenCalledWith("/api/admin/subjects/1");
+  });
+  it("sends subject ordering scoped to its grade", async () => {
+    const input = { gradeId: 3, items: [{ id: 1, sortOrder: 2 }] };
+    mocks.patch.mockResolvedValue({ data: { success: true, message: "ok", data: null } });
+    await adminSubjectService.reorderSubjects(input);
+    expect(mocks.patch).toHaveBeenCalledWith("/api/admin/subjects/reorder", input);
   });
 });

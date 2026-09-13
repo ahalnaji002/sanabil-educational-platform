@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PublicGrade } from "@/types/grade";
 import { publicContentService } from "../services/public-content-service";
 import type { PublicSubject } from "@/types/public-content";
@@ -17,18 +17,11 @@ export function SubjectsSection() {
   const [error, setError] = useState<string | null>(null);
   const requestId = useRef(0);
   const cache = useRef(new Map<string, PublicSubject[]>());
+  const sectionRef = useRef<HTMLElement>(null);
   const selectedGrade = grades.find((grade) => grade.id === selectedGradeId);
 
-  useEffect(() => {
-    let active = true;
-    publicContentService.getPublicGrades().then((items) => { if (active) { setGrades(items); setGradesError(false); setGradesLoading(false); } }).catch(() => { if (active) { setGradesError(true); setGradesLoading(false); } });
-    return () => { active = false; };
-  }, []);
-
-  async function selectGrade(gradeId: number) {
-    const grade = grades.find((item) => item.id === gradeId);
-    if (!grade) return;
-    setSelectedGradeId(gradeId);
+  const loadGrade = useCallback(async (grade: PublicGrade) => {
+    setSelectedGradeId(grade.id);
     setLoading(true);
     setError(null);
     const cached = cache.current.get(grade.slug);
@@ -48,10 +41,35 @@ export function SubjectsSection() {
     } finally {
       if (currentRequest === requestId.current) setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    publicContentService.getPublicGrades().then((items) => {
+      if (!active) return;
+      setGrades(items);
+      setGradesError(false);
+      setGradesLoading(false);
+      const requestedGradeSlug = new URLSearchParams(window.location.search).get("grade");
+      const requestedGrade = items.find(({ slug }) => slug === requestedGradeSlug);
+      if (requestedGrade) void loadGrade(requestedGrade);
+    }).catch(() => { if (active) { setGradesError(true); setGradesLoading(false); } });
+    return () => { active = false; };
+  }, [loadGrade]);
+
+  function selectGrade(gradeId: number) {
+    const grade = grades.find((item) => item.id === gradeId);
+    if (grade) void loadGrade(grade);
   }
 
+  useEffect(() => {
+    if (selectedGradeId === null || loading || window.location.hash !== "#subjects") return;
+    const frame = window.requestAnimationFrame(() => sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, selectedGradeId, subjects]);
+
   return (
-    <section id="subjects" className="section-reveal scroll-mt-24 px-5 py-16 sm:px-8 sm:py-24">
+    <section ref={sectionRef} id="subjects" className="section-reveal scroll-mt-24 px-5 py-16 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-6xl">
         <p className="font-bold text-[var(--sanabil-gold-dark)]">المواد التعليمية</p>
         <h2 className="mt-2 text-3xl font-black text-[var(--sanabil-navy)] sm:text-4xl">
@@ -61,7 +79,7 @@ export function SubjectsSection() {
           اختر صفك أولاً لتظهر المواد التعليمية المتاحة له.
         </p>
 
-        {gradesLoading ? <p className="mt-8 font-bold text-slate-600">جارٍ تحميل الصفوف...</p> : gradesError ? <p role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 font-bold text-red-800">تعذر تحميل الصفوف حاليًا. حاول مجددًا.</p> : grades.length ? <GradeSelector grades={grades} selectedGradeId={selectedGradeId} onSelect={(gradeId) => void selectGrade(gradeId)} /> : <p className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center font-bold text-slate-600">لا توجد صفوف متاحة حاليًا.</p>}
+        {gradesLoading ? <p className="mt-8 font-bold text-slate-600">جارٍ تحميل الصفوف...</p> : gradesError ? <p role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 font-bold text-red-800">تعذر تحميل الصفوف حاليًا. حاول مجددًا.</p> : grades.length ? <GradeSelector grades={grades} selectedGradeId={selectedGradeId} onSelect={selectGrade} /> : <p className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center font-bold text-slate-600">لا توجد صفوف متاحة حاليًا.</p>}
 
         {selectedGrade ? (
           <div key={selectedGrade.id} className="grade-content-enter mt-10" aria-live="polite">

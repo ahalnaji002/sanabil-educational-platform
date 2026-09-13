@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   createSubject: vi.fn(),
   updateSubject: vi.fn(),
   deactivateSubject: vi.fn(),
+  reorderSubjects: vi.fn(),
   query: { value: "" },
 }));
 
@@ -30,6 +31,7 @@ vi.mock("../../services/admin-subject-service", async () => {
       createSubject: mocks.createSubject,
       updateSubject: mocks.updateSubject,
       deactivateSubject: mocks.deactivateSubject,
+      reorderSubjects: mocks.reorderSubjects,
     },
   };
 });
@@ -42,7 +44,7 @@ const grades = [
   { id: 2, name: "حادي عشر", slug: "eleventh", sortOrder: 2, isActive: true, createdAt: "2026", updatedAt: "2026", subjectCount: 1 },
   { id: 3, name: "توجيهي", slug: "tawjihi", sortOrder: 3, isActive: true, createdAt: "2026", updatedAt: "2026", subjectCount: 7 },
 ];
-const subject = { id: 1, name: "الرياضيات", slug: "mathematics", gradeId: 3, grade: grades[2]!, isActive: true, createdAt: "2026-09-12", updatedAt: "2026-09-12" };
+const subject = { id: 1, name: "الرياضيات", slug: "mathematics", gradeId: 3, sortOrder: 1, grade: grades[2]!, isActive: true, createdAt: "2026-09-12", updatedAt: "2026-09-12" };
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -53,6 +55,7 @@ beforeEach(() => {
   mocks.createSubject.mockResolvedValue(subject);
   mocks.updateSubject.mockResolvedValue(subject);
   mocks.deactivateSubject.mockResolvedValue({ ...subject, isActive: false });
+  mocks.reorderSubjects.mockResolvedValue(null);
 });
 
 describe("AdminSubjectsPage", () => {
@@ -127,5 +130,14 @@ describe("AdminSubjectsPage", () => {
     mocks.getSubjects.mockRejectedValue(new AdminSubjectError("unauthorized"));
     render(<AdminSubjectsPage />);
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/admin/login"));
+  });
+  it("reorders subjects after selecting a grade", async () => {
+    const user = userEvent.setup();
+    mocks.query.value = "gradeId=3";
+    mocks.getSubjects.mockResolvedValue([subject, { ...subject, id: 2, name: "الفيزياء", slug: "physics", sortOrder: 2 }]);
+    render(<AdminSubjectsPage />);
+    await screen.findAllByText("الفيزياء");
+    await user.click(screen.getAllByRole("button", { name: "تحريك الرياضيات لأسفل" })[0]!);
+    await waitFor(() => expect(mocks.reorderSubjects).toHaveBeenCalledWith({ gradeId: 3, items: [{ id: 2, sortOrder: 1 }, { id: 1, sortOrder: 2 }] }));
   });
 });

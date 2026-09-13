@@ -37,8 +37,22 @@ export const updateSubjectBodySchema = z.object({
   isActive: z.boolean(),
 }).strict();
 
+const subjectOrderItemSchema = z.object({
+  id: z.number().int().positive(),
+  sortOrder: z.number().int().nonnegative(),
+}).strict();
+
+export const reorderSubjectsBodySchema = z.object({
+  gradeId: z.number().int().positive(),
+  items: z.array(subjectOrderItemSchema).min(1).refine(
+    (items) => new Set(items.map(({ id }) => id)).size === items.length,
+    { message: "Subject IDs must be unique", path: ["items"] },
+  ),
+}).strict();
+
 export type SubjectIdParams = z.infer<typeof subjectIdParamsSchema>;
 export type SubjectListQuery = z.infer<typeof subjectListQuerySchema>;
 export type PublicSubjectListQuery = z.infer<typeof publicSubjectListQuerySchema>;
 export type CreateSubjectBody = z.infer<typeof createSubjectBodySchema>;
 export type UpdateSubjectBody = z.infer<typeof updateSubjectBodySchema>;
+export type ReorderSubjectsBody = z.infer<typeof reorderSubjectsBodySchema>;

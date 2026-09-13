@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ getPublicDriveLinks: vi.fn(), getPublicSubjects: vi.fn() }));
@@ -28,6 +28,9 @@ describe("PublicSubjectPage", () => {
   it("loads public links and preserves API order", async () => {
     render(<PublicSubjectPage slug="mathematics" />);
     expect(await screen.findByRole("heading", { name: "الرياضيات" })).toBeTruthy();
+    const breadcrumb = screen.getByRole("navigation", { name: "مسار التنقل" });
+    expect(within(breadcrumb).getByRole("link", { name: "توجيهي" }).getAttribute("href")).toBe("/?grade=tawjihi#subjects");
+    expect(within(breadcrumb).getByText("الرياضيات").getAttribute("aria-current")).toBe("page");
     const links = screen.getAllByRole("link", { name: /فتح على Google Drive/ });
     expect(links.map((item) => item.getAttribute("href"))).toEqual(["https://drive.google.com/first", "https://drive.google.com/second"]);
     expect(mocks.getPublicDriveLinks).toHaveBeenCalledWith("mathematics");

@@ -1,4 +1,4 @@
-type SubjectIconName = "calculator" | "atom" | "flask" | "book" | "language" | "biology" | "technology";
+export type SubjectIconName = "calculator" | "atom" | "flask" | "book" | "language" | "biology" | "technology";
 
 export function SubjectIcon({ name }: { name: SubjectIconName }) {
   const symbols = { calculator: "∑", atom: "⚛", flask: "⌬", book: "أ", language: "Aa", biology: "🌿", technology: "</>" } as const;

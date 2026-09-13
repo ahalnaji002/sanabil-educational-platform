@@ -3,6 +3,7 @@ import { ApiError } from "../../utils/api-error.js";
 import type {
   CreateSubjectBody,
   PublicSubjectListQuery,
+  ReorderSubjectsBody,
   SubjectListQuery,
   UpdateSubjectBody,
 } from "./subject.schema.js";
@@ -10,10 +11,11 @@ import type { SubjectRepository } from "./subject.repository.js";
 import type { PublicSubject, SubjectRecord, SubjectWriteInput } from "./subject.types.js";
 import type { GradeRepository } from "../grades/grade.repository.js";
 
-const normalizeInput = (input: CreateSubjectBody | UpdateSubjectBody): SubjectWriteInput => ({
+const normalizeInput = (input: CreateSubjectBody | UpdateSubjectBody, sortOrder: number): SubjectWriteInput => ({
   name: input.name.trim(),
   slug: input.slug.trim().toLowerCase(),
   gradeId: input.gradeId,
+  sortOrder,
   isActive: input.isActive,
 });
 
@@ -38,7 +40,8 @@ export class SubjectService {
   }
 
   async create(input: CreateSubjectBody): Promise<SubjectRecord> {
-    const data = normalizeInput(input);
+    const sortOrder = ((await this.repository.findMaxSortOrder(input.gradeId)) ?? -1) + 1;
+    const data = normalizeInput(input, sortOrder);
     if (!await this.gradeRepository.findById(data.gradeId)) throw new ApiError(400, "Grade does not exist", { gradeId: "Grade does not exist" });
     if (await this.repository.findBySlug(data.slug)) {
       throw new ApiError(409, "Subject slug already exists", { slug: "Slug is already in use" });
@@ -56,7 +59,11 @@ export class SubjectService {
 
   async update(id: number, input: UpdateSubjectBody): Promise<SubjectRecord> {
     await this.getById(id);
-    const data = normalizeInput(input);
+    const current = await this.getById(id);
+    const sortOrder = current.gradeId === input.gradeId
+      ? current.sortOrder
+      : ((await this.repository.findMaxSortOrder(input.gradeId)) ?? -1) + 1;
+    const data = normalizeInput(input, sortOrder);
     if (!await this.gradeRepository.findById(data.gradeId)) throw new ApiError(400, "Grade does not exist", { gradeId: "Grade does not exist" });
     const duplicate = await this.repository.findBySlug(data.slug);
     if (duplicate && duplicate.id !== id) {
@@ -76,6 +83,16 @@ export class SubjectService {
   async deactivate(id: number): Promise<SubjectRecord> {
     const subject = await this.getById(id);
     return subject.isActive ? this.repository.deactivate(id) : subject;
+  }
+
+
+  async reorder(input: ReorderSubjectsBody): Promise<void> {
+    if (!await this.gradeRepository.findById(input.gradeId)) throw new ApiError(400, "Grade does not exist", { gradeId: "Grade does not exist" });
+    const subjects = await this.repository.findByIds(input.items.map(({ id }) => id));
+    if (subjects.length !== input.items.length || subjects.some(({ gradeId }) => gradeId !== input.gradeId)) {
+      throw new ApiError(400, "All Subjects must belong to the selected Grade", { items: "One or more Subjects do not belong to the selected Grade" });
+    }
+    await this.repository.reorder(input.gradeId, input.items);
   }
 
   async listPublic(filters: PublicSubjectListQuery): Promise<PublicSubject[]> {

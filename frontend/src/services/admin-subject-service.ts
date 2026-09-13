@@ -4,6 +4,7 @@ import type {
   AdminSubject,
   CreateSubjectInput,
   SubjectFilters,
+  SubjectReorderInput,
   UpdateSubjectInput,
 } from "../types/admin-subject";
 
@@ -78,4 +79,8 @@ export const adminSubjectService = {
   deactivateSubject: (id: number) => subjectRequest<{ subject: AdminSubject }>(() =>
     apiClient.delete(`/api/admin/subjects/${String(id)}`),
   ).then(({ subject }) => subject),
+
+  reorderSubjects: (input: SubjectReorderInput) => subjectRequest<null>(() =>
+    apiClient.patch("/api/admin/subjects/reorder", input),
+  ),
 };

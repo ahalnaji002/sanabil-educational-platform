@@ -54,7 +54,13 @@ export function PublicSubjectPage({ slug }: { slug: string }) {
           <>
             <section className="bg-[var(--sanabil-navy)] px-5 pb-16 pt-10 text-white sm:px-8 sm:pb-20">
               <div className="mx-auto max-w-5xl">
-                <nav aria-label="مسار التنقل" className="text-sm text-slate-300"><Link href="/" className="hover:text-white">الرئيسية</Link><span className="mx-2">/</span><span>{content.subject.name}</span></nav>
+                <nav aria-label="مسار التنقل" className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
+                  <Link href="/" className="hover:text-white">الرئيسية</Link>
+                  <span aria-hidden="true">/</span>
+                  <Link href={`/?grade=${encodeURIComponent(content.subject.grade.slug)}#subjects`} className="font-bold text-[var(--sanabil-gold)] hover:text-white">{content.subject.grade.name}</Link>
+                  <span aria-hidden="true">/</span>
+                  <span aria-current="page">{content.subject.name}</span>
+                </nav>
                 <p className="mt-10 font-bold text-[var(--sanabil-gold)]">وجهات المادة</p>
                 <h1 className="mt-2 text-4xl font-black sm:text-5xl">{content.subject.name}</h1>
                 <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-300">اختر الرابط المناسب ثم تابع التصفح داخل Google Drive.</p>

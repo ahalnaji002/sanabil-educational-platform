@@ -9,7 +9,7 @@ import type { AdminRecord } from "../src/modules/auth/auth.types.js";
 import type { GradeRepository } from "../src/modules/grades/grade.repository.js";
 import type { GradeOrderItem, GradeRecord, GradeWriteInput, PublicGrade } from "../src/modules/grades/grade.types.js";
 import type { RepositorySubjectFilters, SubjectRepository } from "../src/modules/subjects/subject.repository.js";
-import type { PublicSubject, SubjectRecord, SubjectWriteInput } from "../src/modules/subjects/subject.types.js";
+import type { PublicSubject, SubjectOrderItem, SubjectRecord, SubjectWriteInput } from "../src/modules/subjects/subject.types.js";
 
 type SubjectDetailBody = { data: { subject: SubjectRecord } };
 type SubjectListBody = { data: { subjects: SubjectRecord[] } };
@@ -61,7 +61,7 @@ const eleventh = grade({ id: 2, name: "حادي عشر", slug: "eleventh", sortO
 const tawjihi = grade();
 const subject = (overrides: Partial<SubjectRecord> = {}): SubjectRecord => ({
   id: 1, name: "الرياضيات", slug: "mathematics", gradeId: tawjihi.id,
-  grade: tawjihi, isActive: true, createdAt: date, updatedAt: date, ...overrides,
+  sortOrder: 1, grade: tawjihi, isActive: true, createdAt: date, updatedAt: date, ...overrides,
 });
 class MemorySubjectRepository implements SubjectRepository {
   constructor(public subjects: SubjectRecord[]) {}
@@ -69,10 +69,12 @@ class MemorySubjectRepository implements SubjectRepository {
     return Promise.resolve(this.subjects
       .filter((item) => filters.gradeId === undefined || item.gradeId === filters.gradeId)
       .filter((item) => filters.isActive === undefined || item.isActive === filters.isActive)
-      .sort((a, b) => a.grade.sortOrder - b.grade.sortOrder || a.name.localeCompare(b.name) || a.id - b.id));
+      .sort((a, b) => a.grade.sortOrder - b.grade.sortOrder || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name) || a.id - b.id));
   }
   findById(id: number) { return Promise.resolve(this.subjects.find((item) => item.id === id) ?? null); }
   findBySlug(slug: string) { return Promise.resolve(this.subjects.find((item) => item.slug === slug) ?? null); }
+  findByIds(ids: number[]) { return Promise.resolve(this.subjects.filter(({ id }) => ids.includes(id))); }
+  findMaxSortOrder(gradeId: number) { const orders = this.subjects.filter((item) => item.gradeId === gradeId).map(({ sortOrder }) => sortOrder); return Promise.resolve(orders.length ? Math.max(...orders) : null); }
   create(data: SubjectWriteInput) {
     const parent = required(grades.grades.find(({ id }) => id === data.gradeId), "Grade missing in test repository");
     const created = subject({ ...data, grade: parent, id: Math.max(0, ...this.subjects.map(({ id }) => id)) + 1 });
@@ -88,8 +90,9 @@ class MemorySubjectRepository implements SubjectRepository {
   deactivate(id: number) {
     const current = this.subjects.find((item) => item.id === id);
     if (!current) throw new Error("Subject not found in test repository");
-    return this.update(id, { name: current.name, slug: current.slug, gradeId: current.gradeId, isActive: false });
+    return this.update(id, { name: current.name, slug: current.slug, gradeId: current.gradeId, sortOrder: current.sortOrder, isActive: false });
   }
+  reorder(gradeId: number, items: SubjectOrderItem[]) { this.subjects = this.subjects.map((item) => item.gradeId === gradeId ? { ...item, sortOrder: items.find(({ id }) => id === item.id)?.sortOrder ?? item.sortOrder } : item); return Promise.resolve(); }
 }
 
 let grades: MemoryGradeRepository;
@@ -139,6 +142,14 @@ describe("admin subject API", () => {
     await agent.delete("/api/admin/subjects/1").expect(200);
     expect(subjects.subjects).toHaveLength(3);
     expect(subjects.subjects.find(({ id }) => id === 1)?.isActive).toBe(false);
+  });
+  it("reorders subjects within one grade and rejects mixed grades", async () => {
+    subjects.subjects.push(subject({ id: 4, name: "الفيزياء", slug: "physics", sortOrder: 2 }));
+    const agent = await authenticatedAgent();
+    await agent.patch("/api/admin/subjects/reorder").send({ gradeId: 3, items: [{ id: 4, sortOrder: 1 }, { id: 1, sortOrder: 2 }] }).expect(200);
+    const response = await agent.get("/api/admin/subjects?gradeId=3&status=all").expect(200);
+    expect((response.body as SubjectListBody).data.subjects.map(({ id }) => id)).toEqual([4, 1]);
+    await agent.patch("/api/admin/subjects/reorder").send({ gradeId: 3, items: [{ id: 1, sortOrder: 1 }, { id: 2, sortOrder: 2 }] }).expect(400);
   });
 });
 

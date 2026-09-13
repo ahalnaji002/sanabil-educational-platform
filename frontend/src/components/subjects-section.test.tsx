@@ -15,7 +15,7 @@ const grades = [
 afterEach(cleanup);
 
 describe("SubjectsSection", () => {
-  beforeEach(() => { vi.clearAllMocks(); mocks.getPublicGrades.mockResolvedValue(grades); mocks.getPublicSubjects.mockResolvedValue([]); });
+  beforeEach(() => { vi.clearAllMocks(); window.history.replaceState({}, "", "/"); Element.prototype.scrollIntoView = vi.fn(); mocks.getPublicGrades.mockResolvedValue(grades); mocks.getPublicSubjects.mockResolvedValue([]); });
   it("loads active grades and waits for a selection before showing subjects", async () => {
     render(<SubjectsSection />);
 
@@ -51,5 +51,14 @@ describe("SubjectsSection", () => {
     mocks.getPublicGrades.mockRejectedValue(new Error("network"));
     render(<SubjectsSection />);
     expect((await screen.findByRole("alert")).textContent).toContain("تعذر تحميل الصفوف");
+  });
+  it("restores the selected grade from the return URL", async () => {
+    window.history.replaceState({}, "", "/?grade=tawjihi#subjects");
+    mocks.getPublicSubjects.mockResolvedValue([{ id: 1, name: "الرياضيات", slug: "mathematics", grade: { id: 3, name: "توجيهي", slug: "tawjihi" } }]);
+    render(<SubjectsSection />);
+    expect(await screen.findByText("الرياضيات")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "توجيهي" }).getAttribute("aria-pressed")).toBe("true");
+    expect(mocks.getPublicSubjects).toHaveBeenCalledWith("tawjihi");
+    await vi.waitFor(() => expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" }));
   });
 });

@@ -11,7 +11,7 @@ import type { GradeOrderItem, GradeRecord, GradeWriteInput, PublicGrade } from "
 import type { DriveLinkRepository, RepositoryDriveLinkFilters } from "../src/modules/drive-links/drive-link.repository.js";
 import type { DriveLinkOrderItem, DriveLinkRecord, DriveLinkWriteInput, PublicDriveLink } from "../src/modules/drive-links/drive-link.types.js";
 import type { RepositorySubjectFilters, SubjectRepository } from "../src/modules/subjects/subject.repository.js";
-import type { SubjectRecord, SubjectWriteInput } from "../src/modules/subjects/subject.types.js";
+import type { SubjectOrderItem, SubjectRecord, SubjectWriteInput } from "../src/modules/subjects/subject.types.js";
 
 type DriveLinkListBody = { data: { driveLinks: DriveLinkRecord[] } };
 type DriveLinkDetailBody = { data: { driveLink: DriveLinkRecord } };
@@ -61,16 +61,19 @@ const eleventhGrade = grade({ id: 2, name: "حادي عشر", slug: "eleventh", 
 const tawjihiGrade = grade();
 const subject = (overrides: Partial<SubjectRecord> = {}): SubjectRecord => ({
   id: 1, name: "الرياضيات", slug: "mathematics", gradeId: 3, grade: tawjihiGrade,
-  isActive: true, createdAt: date, updatedAt: date, ...overrides,
+  sortOrder: 1, isActive: true, createdAt: date, updatedAt: date, ...overrides,
 });
 class MemorySubjectRepository implements SubjectRepository {
   constructor(public subjects: SubjectRecord[]) {}
   findMany(filters: RepositorySubjectFilters) { return Promise.resolve(this.subjects.filter((item) => filters.gradeId === undefined || item.gradeId === filters.gradeId).filter((item) => filters.isActive === undefined || item.isActive === filters.isActive)); }
   findById(id: number) { return Promise.resolve(this.subjects.find((item) => item.id === id) ?? null); }
   findBySlug(slug: string) { return Promise.resolve(this.subjects.find((item) => item.slug === slug) ?? null); }
+  findByIds(ids: number[]) { return Promise.resolve(this.subjects.filter(({ id }) => ids.includes(id))); }
+  findMaxSortOrder(gradeId: number) { const orders = this.subjects.filter((item) => item.gradeId === gradeId).map(({ sortOrder }) => sortOrder); return Promise.resolve(orders.length ? Math.max(...orders) : null); }
   create(data: SubjectWriteInput) { const parent = required(grades.grades.find(({ id }) => id === data.gradeId), "Grade missing in test repository"); const value = subject({ ...data, grade: parent, id: this.subjects.length + 1 }); this.subjects.push(value); return Promise.resolve(value); }
   update(id: number, data: SubjectWriteInput) { const parent = required(grades.grades.find((item) => item.id === data.gradeId), "Grade missing in test repository"); const value = subject({ ...data, grade: parent, id }); this.subjects = this.subjects.map((item) => item.id === id ? value : item); return Promise.resolve(value); }
-  deactivate(id: number) { const current = required(this.subjects.find((item) => item.id === id), "Subject missing in test repository"); return this.update(id, { name: current.name, slug: current.slug, gradeId: current.gradeId, isActive: false }); }
+  deactivate(id: number) { const current = required(this.subjects.find((item) => item.id === id), "Subject missing in test repository"); return this.update(id, { name: current.name, slug: current.slug, gradeId: current.gradeId, sortOrder: current.sortOrder, isActive: false }); }
+  reorder(gradeId: number, items: SubjectOrderItem[]) { this.subjects = this.subjects.map((item) => item.gradeId === gradeId ? { ...item, sortOrder: items.find(({ id }) => id === item.id)?.sortOrder ?? item.sortOrder } : item); return Promise.resolve(); }
 }
 
 const link = (parent: SubjectRecord, overrides: Partial<DriveLinkRecord> = {}): DriveLinkRecord => ({

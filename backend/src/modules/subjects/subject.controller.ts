@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { sendSuccess } from "../../utils/response.js";
 import type {
   CreateSubjectBody,
+  ReorderSubjectsBody,
   SubjectIdParams,
   SubjectListQuery,
   UpdateSubjectBody,
@@ -25,6 +26,11 @@ export class SubjectController {
   create = async (req: Request, res: Response) => {
     const subject = await this.service.create(req.body as CreateSubjectBody);
     sendSuccess(res, 201, "Subject created successfully", { subject });
+  };
+
+  reorder = async (req: Request, res: Response) => {
+    await this.service.reorder(req.body as ReorderSubjectsBody);
+    sendSuccess(res, 200, "Subjects reordered successfully", null);
   };
 
   update = async (req: Request, res: Response) => {

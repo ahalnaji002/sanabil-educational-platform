@@ -12,6 +12,7 @@ export type SubjectRecord = {
   name: string;
   slug: string;
   gradeId: number;
+  sortOrder: number;
   grade: SubjectGrade;
   isActive: boolean;
   createdAt: Date;
@@ -22,7 +23,10 @@ export type SubjectWriteInput = {
   name: string;
   slug: string;
   gradeId: number;
+  sortOrder: number;
   isActive: boolean;
 };
+
+export type SubjectOrderItem = { id: number; sortOrder: number };
 
 export type PublicSubject = Pick<SubjectRecord, "id" | "name" | "slug"> & { grade: Pick<SubjectGrade, "id" | "name" | "slug"> };
