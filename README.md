@@ -21,6 +21,7 @@ The repository is split into independently deployable applications:
 - Responsive footer with direct phone and WhatsApp contact links.
 - Arabic RTL frontend foundation with Sanabil navy and gold branding.
 - Express REST API foundation, health endpoint, and HttpOnly cookie-based admin authentication.
+- Production-safe per-IP API rate limiting behind one trusted Nginx proxy: 200 API requests per 15 minutes, plus a stricter login limit of five failed attempts per 15 minutes; health monitoring is excluded.
 - Arabic admin login and protected responsive dashboard shell at `/admin/login` and `/admin/dashboard`.
 - Protected Arabic grade management at `/admin/dashboard/grades` with add, edit, activate/deactivate, subject counts, and persisted ordering.
 - Protected Arabic subject management at `/admin/dashboard/subjects` with dynamic Grade/status filters, create, edit, activate, soft-deactivate, and persisted per-Grade ordering.
@@ -97,7 +98,7 @@ npm run build
 
 The frontend uses Next.js 16, React 19, Axios, Tailwind CSS 4, TypeScript, ESLint, Vitest, and frontend-only Testing Library/jsdom development dependencies.
 
-The backend uses Express 5, Prisma, MySQL, Zod, Multer, bcrypt, JSON Web Tokens, Helmet, CORS, cookie-parser, TypeScript, ESLint, Supertest, and Vitest.
+The backend uses Express 5, express-rate-limit, Prisma, MySQL, Zod, Multer, bcrypt, JSON Web Tokens, Helmet, CORS, cookie-parser, TypeScript, ESLint, Supertest, and Vitest.
 
 ## Vercel deployment
 

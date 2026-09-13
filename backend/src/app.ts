@@ -22,6 +22,7 @@ import { profileRouter } from "./modules/profile/profile.routes.js";
 import { PrismaDashboardRepository, type DashboardRepository } from "./modules/dashboard/dashboard.repository.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { announcementUploadDirectory, announcementUploadPublicPath } from "./modules/announcements/announcement-upload.js";
+import { createGeneralApiRateLimiter } from "./middlewares/rate-limiters.js";
 
 export const createApp = (
   config: AppConfig,
@@ -36,6 +37,7 @@ export const createApp = (
   const app = express();
 
   app.disable("x-powered-by");
+  app.set("trust proxy", 1);
   app.use(helmet());
   app.use(cors({ origin: config.FRONTEND_ORIGIN, credentials: true }));
   app.use(express.json({ limit: "100kb" }));
@@ -50,6 +52,7 @@ export const createApp = (
   app.get("/api/health", (_request, response) => {
     sendSuccess(response, 200, "Service is healthy", { status: "ok" });
   });
+  app.use("/api", createGeneralApiRateLimiter());
   app.use("/api/auth", authRouter(config, repo));
   app.use("/api/admin/grades", adminGradeRouter(config, repo, gradeRepository));
   app.use("/api/admin/subjects", adminSubjectRouter(config, repo, subjectRepository, gradeRepository));

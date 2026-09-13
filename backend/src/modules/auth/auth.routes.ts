@@ -8,11 +8,13 @@ import { sendSuccess } from "../../utils/response.js";
 import type { AdminRepository } from "./auth.repository.js";
 import { AuthService } from "./auth.service.js";
 import { signToken } from "./auth.tokens.js";
+import { createLoginRateLimiter } from "../../middlewares/rate-limiters.js";
 const loginSchema = z.object({ email: z.email("Invalid email").transform((v) => v.trim().toLowerCase()), password: z.string().min(1) }).strict();
 export const authRouter = (config: AppConfig, repo: AdminRepository) => {
   const router = Router(); const service = new AuthService(repo);
+  const loginRateLimiter = createLoginRateLimiter();
   const cookie = { httpOnly: true, secure: config.NODE_ENV === "production", sameSite: config.COOKIE_SAME_SITE, path: "/" } as const;
-  router.post("/login", validateRequest({ body: loginSchema }), asyncHandler(async (req, res) => {
+  router.post("/login", loginRateLimiter, validateRequest({ body: loginSchema }), asyncHandler(async (req, res) => {
     const body = req.body as z.infer<typeof loginSchema>; const admin = await service.login(body.email, body.password);
     res.cookie(config.AUTH_COOKIE_NAME, signToken(admin, config), { ...cookie, maxAge: config.jwtMaxAgeMs });
     sendSuccess(res, 200, "Login successful", { admin });
