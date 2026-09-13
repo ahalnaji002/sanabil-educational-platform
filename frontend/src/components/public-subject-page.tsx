@@ -61,9 +61,9 @@ export function PublicSubjectPage({ slug }: { slug: string }) {
                   <span aria-hidden="true">/</span>
                   <span aria-current="page">{content.subject.name}</span>
                 </nav>
-                <p className="mt-10 font-bold text-[var(--sanabil-gold)]">وجهات المادة</p>
-                <h1 className="mt-2 text-4xl font-black sm:text-5xl">{content.subject.name}</h1>
-                <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-300">اختر الرابط المناسب ثم تابع التصفح داخل Google Drive.</p>
+                <p className="mt-10 font-bold leading-7 text-[var(--sanabil-gold)]">وجهات المادة</p>
+                <h1 className="mt-4 text-4xl font-black leading-[1.35] sm:text-5xl">{content.subject.name}</h1>
+                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">اختر الرابط المناسب ثم تابع التصفح داخل Google Drive.</p>
               </div>
             </section>
             <section className="px-5 py-10 sm:px-8 sm:py-14">
