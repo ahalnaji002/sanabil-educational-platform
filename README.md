@@ -31,6 +31,7 @@ The repository is split into independently deployable applications:
 - Prisma entities: `Admin`, `Grade`, `Subject`, `DriveLink`, and `Announcement`.
 - A subject owns zero or more ordered Drive destination links.
 - Environment templates keep credentials and secrets out of source control.
+- GitHub Actions CI validates both workspaces on pull requests and pushes to `main`; successful `main` builds deploy the backend through the restricted VPS deployment wrapper while Vercel continues to deploy the frontend.
 
 Authentication routes are POST /api/auth/login, POST /api/auth/logout, and GET /api/auth/me. Login never returns the JWT in JSON.
 
@@ -110,3 +111,5 @@ Create a Vercel project from this repository with these exact settings:
 - Node.js Version: 22.x
 
 Set `NEXT_PUBLIC_API_URL` in Vercel to the production API origin. `frontend/vercel.json` declares the Next.js framework; student content and admin operations communicate with the backend through the shared Axios client.
+
+Production CI/CD, backend deployment, Prisma migration safety, required GitHub Environment secret names, recovery guidance, and the manual fallback are documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).

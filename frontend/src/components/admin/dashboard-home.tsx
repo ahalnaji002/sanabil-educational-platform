@@ -24,9 +24,11 @@ function AnimatedAdminName({ name }: { name: string }) {
     const characters = Array.from(name);
     let visibleCharacters = 0;
     let isDeleting = false;
+    let active = true;
     let timer: ReturnType<typeof setTimeout>;
 
     const updateName = () => {
+      if (!active) return;
       visibleCharacters += isDeleting ? -1 : 1;
       setAnimationFrame({
         text: characters.slice(0, visibleCharacters).join(""),
@@ -45,7 +47,7 @@ function AnimatedAdminName({ name }: { name: string }) {
     };
 
     timer = setTimeout(updateName, 120);
-    return () => clearTimeout(timer);
+    return () => { active = false; clearTimeout(timer); };
   }, [name]);
 
   return (
