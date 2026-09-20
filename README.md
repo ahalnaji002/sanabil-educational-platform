@@ -17,7 +17,7 @@ The repository is split into independently deployable applications:
 - Student subject discovery and Drive destinations use unauthenticated public content APIs.
 - Safe Google Drive destination behavior: links open in a new tab only when an approved URL exists.
 - Official Sanabil logo and Alexandria Arabic typography.
-- API-driven, ordered and scheduled announcements with optional uploaded images and an accessible details dialog.
+- API-driven, ordered and scheduled announcements with optional uploaded images, an accessible details dialog, and an animated “show more” control that keeps the homepage compact after the first two announcements.
 - Responsive footer with direct phone and WhatsApp contact links.
 - Arabic RTL frontend foundation with Sanabil navy and gold branding.
 - Express REST API foundation, health endpoint, and HttpOnly cookie-based admin authentication.

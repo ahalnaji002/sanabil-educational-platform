@@ -44,4 +44,21 @@ describe("announcements section", () => {
     expect(within(dialog).getByRole("heading", { name: "إعلان تجريبي" })).toBeTruthy();
   });
   it("shows a retryable Arabic error when the API is unavailable", async () => { mocks.load.mockRejectedValue(new Error("offline")); render(<AnnouncementsSection />); await waitFor(() => expect(screen.getByRole("alert").textContent).toContain("تعذر تحميل الإعلانات")); expect(screen.getByRole("button", { name: "إعادة المحاولة" })).toBeTruthy(); });
+  it("collapses announcements after the first two and expands them on request", async () => {
+    const user = userEvent.setup();
+    const announcements = [1, 2, 3, 4].map((id) => ({ ...item, id, title: `إعلان ${id}` }));
+    render(<AnnouncementsSection announcements={announcements} />);
+
+    const more = document.getElementById("more-announcements");
+    const toggle = screen.getByRole("button", { name: "عرض المزيد (2)" });
+    expect(more?.getAttribute("aria-hidden")).toBe("true");
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+
+    await user.click(toggle);
+    expect(more?.getAttribute("aria-hidden")).toBe("false");
+    expect(screen.getByRole("button", { name: "عرض أقل" }).getAttribute("aria-expanded")).toBe("true");
+
+    await user.click(screen.getByRole("button", { name: "عرض أقل" }));
+    expect(more?.getAttribute("aria-hidden")).toBe("true");
+  });
 });
