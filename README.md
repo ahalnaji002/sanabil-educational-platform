@@ -1,6 +1,6 @@
 # Sanabil Educational Platform
 
-**Language / اللغة:** **English** | [العربية](README.ar.md)
+**English** | [العربية](README.ar.md)
 
 ## Overview
 Sanabil is an Arabic-first educational platform for students in Palestine. Students browse grades and subjects and open approved Google Drive destination links. Sanabil does not host or index the files on Google Drive. A protected administration interface manages educational content.
