@@ -1,4 +1,4 @@
-# Sanabil Educational Platform
+# 🌱 Sanabil Educational Platform
 
 **English** | [العربية](README.ar.md)
 
